@@ -1,60 +1,263 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { getUserProfile, updateUserProfile, uploadProfilePicture } from '@/lib/supabase/profile';
+import { useAuth } from '@/lib/supabase/auth-context';
+import { supabase } from '@/lib/supabase/client';
+
+interface Skill {
+  name: string;
+  availability: 'available' | 'busy' | 'unavailable';
+}
 
 interface ProfileData {
-  name: string;
-  email: string;
-  role: string;
+  profilePic: string;
   bio: string;
-  skills: string[];
-  experience: string;
+  skills: Skill[];
   location: string;
   website: string;
   github: string;
   linkedin: string;
   twitter: string;
-  availability: 'available' | 'busy' | 'unavailable';
 }
 
 export default function UpdateProfile() {
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<ProfileData>({
-    name: 'Alex Thompson',
-    email: 'alex@example.com',
-    role: 'Full Stack Developer',
-    bio: 'Passionate developer with expertise in modern web technologies. I love building scalable applications and working with diverse teams.',
-    skills: ['React', 'Node.js', 'TypeScript', 'PostgreSQL', 'Docker'],
-    experience: '5 years',
-    location: 'San Francisco, CA',
-    website: 'https://alexthompson.dev',
-    github: 'https://github.com/alexthompson',
-    linkedin: 'https://linkedin.com/in/alexthompson',
-    twitter: 'https://twitter.com/alexthompson',
-    availability: 'available'
+    profilePic: '',
+    bio: '',
+    skills: [],
+    location: '',
+    website: '',
+    github: '',
+    linkedin: '',
+    twitter: '',
+    availability: 'available',
   });
 
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [newSkill, setNewSkill] = useState('');
+
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+      loadUserProfile();
+    }
+  }, [user, authLoading]);
+
+  const loadUserProfile = async () => {
+    try {
+      setLoading(true);
+      
+      // Use Supabase client directly to get user profile
+      // Load user profile and skills
+      const [{ data: userData, error: userError }, { data: skillsData, error: skillsError }] = await Promise.all([
+        supabase
+          .from('users')
+          .select('*')
+          .eq('id', user?.id)
+          .single(),
+        supabase
+          .from('user_skills')
+          .select('skill_name, availability')
+          .eq('user_id', user?.id)
+      ]);
+
+      if (userError) {
+        console.error('Error loading profile:', userError);
+        // If user doesn't exist in users table, create basic profile
+        if (userError.code === 'PGRST116') {
+          const username = user?.user_metadata?.username || 
+                          user?.email?.split('@')[0] || 
+                          `user_${user?.id?.substring(0, 8)}`;
+          
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert([
+              {
+                id: user?.id,
+                username: username,
+                email: user?.email,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }
+            ]);
+
+          if (insertError) {
+            console.error('Error creating user profile:', insertError);
+          } else {
+            // Reload after creating profile
+            const { data: newUserData } = await supabase
+              .from('users')
+              .select('*')
+              .eq('id', user?.id)
+              .single();
+            
+            if (newUserData) {
+              setProfile({
+              profilePic: newUserData.avatar_url || '',
+              bio: newUserData.bio || '',
+              skills: skillsData?.map(s => ({ name: s.skill_name, availability: s.availability || 'available' })) || [],
+              location: newUserData.location || '',
+              website: newUserData.website_url || '',
+              github: newUserData.github_url || '',
+              linkedin: newUserData.linkedin_url || '',
+              twitter: newUserData.twitter_url || ''
+            });
+            }
+          }
+        }
+      } else if (userData) {
+        setProfile({
+            profilePic: userData.avatar_url || '',
+            bio: userData.bio || '',
+            skills: skillsData?.map(s => ({ name: s.skill_name, availability: s.availability || 'available' })) || [],
+            location: userData.location || '',
+            website: userData.website_url || '',
+            github: userData.github_url || '',
+            linkedin: userData.linkedin_url || '',
+            twitter: userData.twitter_url || '',
+            availability: 'available'
+          });
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      alert('Error loading profile data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (field: keyof ProfileData, value: string) => {
     setProfile(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        setSaving(true);
+        
+        // Upload image to Supabase storage
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
+        const filePath = `avatars/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath);
+
+        setProfile(prev => ({ ...prev, profilePic: publicUrl }));
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        alert('Error uploading profile picture');
+      } finally {
+        setSaving(false);
+      }
+    }
+  };
+
   const handleAddSkill = () => {
-    if (newSkill.trim() && !profile.skills.includes(newSkill.trim())) {
-      setProfile(prev => ({ ...prev, skills: [...prev.skills, newSkill.trim()] }));
+    if (newSkill && !profile.skills.some(skill => skill.name === newSkill)) {
+      setProfile(prev => ({
+        ...prev,
+        skills: [...prev.skills, { name: newSkill, availability: 'available' }]
+      }));
       setNewSkill('');
     }
   };
 
-  const handleRemoveSkill = (skillToRemove: string) => {
-    setProfile(prev => ({ ...prev, skills: prev.skills.filter(skill => skill !== skillToRemove) }));
+  const handleRemoveSkill = (skillNameToRemove: string) => {
+    setProfile(prev => ({
+      ...prev,
+      skills: prev.skills.filter(skill => skill.name !== skillNameToRemove)
+    }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSkillAvailabilityChange = (skillName: string, availability: 'available' | 'busy' | 'unavailable') => {
+    setProfile(prev => ({
+      ...prev,
+      skills: prev.skills.map(skill => 
+        skill.name === skillName ? { ...skill, availability } : skill
+      )
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Profile updated:', profile);
-    alert('Profile updated successfully!');
+    try {
+      setSaving(true);
+      
+      // Update user profile using Supabase client
+      const { error } = await supabase
+          .from('users')
+          .update({
+            bio: profile.bio,
+            location: profile.location,
+            website_url: profile.website,
+            github_url: profile.github,
+            linkedin_url: profile.linkedin,
+            twitter_url: profile.twitter,
+            avatar_url: profile.profilePic,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user?.id);
+
+      if (error) {
+        throw error;
+      }
+
+      // Handle skills separately - first delete existing skills, then insert new ones
+      if (user?.id) {
+        // Delete existing skills
+        await supabase
+          .from('user_skills')
+          .delete()
+          .eq('user_id', user.id);
+
+        // Insert new skills
+        if (profile.skills.length > 0) {
+          const skillsToInsert = profile.skills.map(skill => ({
+            user_id: user.id,
+            skill_name: skill.name,
+            proficiency_level: 'beginner', // Default level
+            availability: skill.availability
+          }));
+
+          const { error: skillsError } = await supabase
+            .from('user_skills')
+            .insert(skillsToInsert);
+
+          if (skillsError) {
+            console.error('Error updating skills:', skillsError);
+          }
+        }
+      }
+
+      alert('Profile updated successfully!');
+      router.push('/dashboard');
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      alert(`Error updating profile: ${error.message || error}`);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -72,106 +275,88 @@ export default function UpdateProfile() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-gradient-to-r from-[#E70008]/10 to-[#FF9940]/10 rounded-lg p-8 border border-[#E70008]/30">
-          <h2 className="text-2xl font-bold font-mono text-[#FF9940] mb-6">Update Your Profile</h2>
-          
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-mono text-[#FF9940] mb-2">Full Name</label>
-                <input
-                  type="text"
-                  value={profile.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  className="w-full px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
-                  placeholder="Enter your full name"
-                />
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="text-[#FF9940] font-mono">Loading profile...</div>
+          </div>
+        ) : (
+          <div className="bg-gradient-to-r from-[#E70008]/10 to-[#FF9940]/10 rounded-lg p-8 border border-[#E70008]/30">
+            <h2 className="text-2xl font-bold font-mono text-[#FF9940] mb-6">Update Your Profile</h2>
+            
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Profile Picture Upload */}
+              <div className="flex flex-col items-center">
+                <label className="block text-sm font-mono text-[#FF9940] mb-2">Profile Picture</label>
+                <div className="relative">
+                  {profile.profilePic ? (
+                    <img 
+                      src={profile.profilePic} 
+                      alt="Profile" 
+                      className="w-32 h-32 rounded-full object-cover border-2 border-[#E70008]"
+                    />
+                  ) : (
+                    <div className="w-32 h-32 rounded-full bg-[#E70008]/20 border-2 border-[#E70008] flex items-center justify-center">
+                      <span className="text-[#FF9940] text-4xl">👤</span>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                </div>
+                <p className="text-xs text-[#FF9940]/60 mt-2">Click to upload profile picture</p>
               </div>
 
               <div>
-                <label className="block text-sm font-mono text-[#FF9940] mb-2">Email</label>
-                <input
-                  type="email"
-                  value={profile.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
+                <label className="block text-sm font-mono text-[#FF9940] mb-2">Bio</label>
+                <textarea
+                  value={profile.bio}
+                  onChange={(e) => handleInputChange('bio', e.target.value)}
+                  rows={4}
                   className="w-full px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
-                  placeholder="Enter your email"
+                  placeholder="Tell us about yourself"
                 />
               </div>
-            </div>
 
-            <div>
-              <label className="block text-sm font-mono text-[#FF9940] mb-2">Role/Title</label>
-              <input
-                type="text"
-                value={profile.role}
-                onChange={(e) => handleInputChange('role', e.target.value)}
-                className="w-full px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
-                placeholder="e.g. Full Stack Developer"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-mono text-[#FF9940] mb-2">Bio</label>
-              <textarea
-                value={profile.bio}
-                onChange={(e) => handleInputChange('bio', e.target.value)}
-                rows={4}
-                className="w-full px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
-                placeholder="Tell us about yourself"
-              />
-            </div>
-
-            {/* Skills */}
-            <div>
-              <label className="block text-sm font-mono text-[#FF9940] mb-2">Skills</label>
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="text"
-                  value={newSkill}
-                  onChange={(e) => setNewSkill(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
-                  className="flex-1 px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
-                  placeholder="Add a skill"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddSkill}
-                  className="px-4 py-2 bg-[#E70008] text-black font-mono font-bold rounded-md hover:bg-[#FF9940] transition-colors"
-                >
-                  Add
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {profile.skills.map((skill) => (
-                  <span
-                    key={skill}
-                    className="px-3 py-1 bg-[#E70008]/30 text-[#FF9940] text-sm font-mono rounded-full border border-[#E70008] flex items-center gap-2"
+              {/* Skills */}
+              <div>
+                <label className="block text-sm font-mono text-[#FF9940] mb-2">Skills</label>
+                <div className="flex gap-2 mb-3">
+                  <input
+                    type="text"
+                    value={newSkill}
+                    onChange={(e) => setNewSkill(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
+                    className="flex-1 px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
+                    placeholder="Enter any skill you have"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddSkill}
+                    className="px-4 py-2 bg-[#E70008] text-black font-mono font-bold rounded-md hover:bg-[#FF9940] transition-colors"
                   >
-                    {skill}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveSkill(skill)}
-                      className="text-[#FF9940]/60 hover:text-[#FF9940]"
+                    Add
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {profile.skills.map((skill) => (
+                    <span
+                      key={skill.name}
+                      className="px-3 py-1 bg-[#E70008]/30 text-[#FF9940] text-sm font-mono rounded-full border border-[#E70008] flex items-center gap-2"
                     >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-mono text-[#FF9940] mb-2">Experience</label>
-                <input
-                  type="text"
-                  value={profile.experience}
-                  onChange={(e) => handleInputChange('experience', e.target.value)}
-                  className="w-full px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
-                  placeholder="e.g. 5 years"
-                />
+                      {skill.name}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSkill(skill.name)}
+                        className="text-[#FF9940]/60 hover:text-[#FF9940]"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
               </div>
 
               <div>
@@ -184,87 +369,89 @@ export default function UpdateProfile() {
                   placeholder="City, Country"
                 />
               </div>
-            </div>
 
-            {/* Links */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-mono text-[#FF9940] mb-2">Website</label>
-                <input
-                  type="url"
-                  value={profile.website}
-                  onChange={(e) => handleInputChange('website', e.target.value)}
-                  className="w-full px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
-                  placeholder="https://yourwebsite.com"
-                />
+              {/* Links */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-mono text-[#FF9940] mb-2">Website <span className="text-[#FF9940]/60 text-xs">(optional)</span></label>
+                  <input
+                    type="url"
+                    value={profile.website}
+                    onChange={(e) => handleInputChange('website', e.target.value)}
+                    className="w-full px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
+                    placeholder="https://yourwebsite.com (optional)"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-mono text-[#FF9940] mb-2">GitHub <span className="text-[#FF9940]/60 text-xs">(optional)</span></label>
+                  <input
+                    type="url"
+                    value={profile.github}
+                    onChange={(e) => handleInputChange('github', e.target.value)}
+                    className="w-full px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
+                    placeholder="https://github.com/username (optional)"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-mono text-[#FF9940] mb-2">GitHub</label>
-                <input
-                  type="url"
-                  value={profile.github}
-                  onChange={(e) => handleInputChange('github', e.target.value)}
-                  className="w-full px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
-                  placeholder="https://github.com/username"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-mono text-[#FF9940] mb-2">LinkedIn <span className="text-[#FF9940]/60 text-xs">(optional)</span></label>
+                  <input
+                    type="url"
+                    value={profile.linkedin}
+                    onChange={(e) => handleInputChange('linkedin', e.target.value)}
+                    className="w-full px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
+                    placeholder="https://linkedin.com/in/username (optional)"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-mono text-[#FF9940] mb-2">Twitter <span className="text-[#FF9940]/60 text-xs">(optional)</span></label>
+                  <input
+                    type="url"
+                    value={profile.twitter}
+                    onChange={(e) => handleInputChange('twitter', e.target.value)}
+                    className="w-full px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
+                    placeholder="https://twitter.com/username (optional)"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Your Availability */}
               <div>
-                <label className="block text-sm font-mono text-[#FF9940] mb-2">LinkedIn</label>
-                <input
-                  type="url"
-                  value={profile.linkedin}
-                  onChange={(e) => handleInputChange('linkedin', e.target.value)}
-                  className="w-full px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
-                  placeholder="https://linkedin.com/in/username"
-                />
+                <label className="block text-sm font-mono text-[#FF9940] mb-2">Your Availability</label>
+                <select
+                  value="available"
+                  onChange={() => {}}
+                  className="w-full px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
+                >
+                  <option value="available" className="bg-[#E70008] text-black">Available</option>
+                  <option value="busy" className="bg-[#E70008] text-black">Busy</option>
+                  <option value="unavailable" className="bg-[#E70008] text-black">Unavailable</option>
+                </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-mono text-[#FF9940] mb-2">Twitter</label>
-                <input
-                  type="url"
-                  value={profile.twitter}
-                  onChange={(e) => handleInputChange('twitter', e.target.value)}
-                  className="w-full px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
-                  placeholder="https://twitter.com/username"
-                />
+              {/* Submit Button */}
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex-1 py-3 px-4 bg-[#E70008] text-black font-mono font-bold rounded-md hover:bg-[#FF9940] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? 'Saving...' : 'Update Profile'}
+                </button>
+                <Link
+                  href="/dashboard"
+                  className="flex-1 py-3 px-4 bg-transparent border border-[#E70008] text-[#FF9940] font-mono font-bold rounded-md text-center hover:bg-[#E70008]/20 hover:text-[#FF9940] transition-colors"
+                >
+                  Cancel
+                </Link>
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-mono text-[#FF9940] mb-2">Availability</label>
-              <select
-                value={profile.availability}
-                onChange={(e) => handleInputChange('availability', e.target.value as 'available' | 'busy' | 'unavailable')}
-                className="w-full px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
-              >
-                <option value="available" className="bg-[#E70008] text-black">Available for new projects</option>
-                <option value="busy" className="bg-[#E70008] text-black">Busy but open to opportunities</option>
-                <option value="unavailable" className="bg-[#E70008] text-black">Not available</option>
-              </select>
-            </div>
-
-            {/* Submit Button */}
-            <div className="flex gap-4 pt-4">
-              <button
-                type="submit"
-                className="flex-1 py-3 px-4 bg-[#E70008] text-black font-mono font-bold rounded-md hover:bg-[#FF9940] transition-colors"
-              >
-                Update Profile
-              </button>
-              <Link
-                href="/dashboard"
-                className="flex-1 py-3 px-4 bg-transparent border border-[#E70008] text-[#FF9940] font-mono font-bold rounded-md text-center hover:bg-[#E70008]/20 hover:text-[#FF9940] transition-colors"
-              >
-                Cancel
-              </Link>
-            </div>
-          </form>
-        </div>
+            </form>
+          </div>
+        )}
       </main>
     </div>
   );
