@@ -21,6 +21,7 @@ interface ProfileData {
   github: string;
   linkedin: string;
   twitter: string;
+  availability: 'available' | 'busy' | 'unavailable';
 }
 
 export default function UpdateProfile() {
@@ -109,7 +110,8 @@ export default function UpdateProfile() {
               website: newUserData.website_url || '',
               github: newUserData.github_url || '',
               linkedin: newUserData.linkedin_url || '',
-              twitter: newUserData.twitter_url || ''
+              twitter: newUserData.twitter_url || '',
+              availability: newUserData.availability || 'available'
             });
             }
           }
@@ -124,7 +126,7 @@ export default function UpdateProfile() {
             github: userData.github_url || '',
             linkedin: userData.linkedin_url || '',
             twitter: userData.twitter_url || '',
-            availability: 'available'
+            availability: userData.availability || 'available'
           });
       }
     } catch (error) {
@@ -215,6 +217,7 @@ export default function UpdateProfile() {
             linkedin_url: profile.linkedin,
             twitter_url: profile.twitter,
             avatar_url: profile.profilePic,
+            availability: profile.availability,
             updated_at: new Date().toISOString()
           })
           .eq('id', user?.id);
@@ -424,8 +427,8 @@ export default function UpdateProfile() {
               <div>
                 <label className="block text-sm font-mono text-[#FF9940] mb-2">Your Availability</label>
                 <select
-                  value="available"
-                  onChange={() => {}}
+                  value={profile.availability}
+                  onChange={(e) => handleInputChange('availability', e.target.value)}
                   className="w-full px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
                 >
                   <option value="available" className="bg-[#E70008] text-black">Available</option>
