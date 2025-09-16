@@ -252,9 +252,10 @@ export default function UpdateProfile() {
 
       alert('Profile updated successfully!');
       router.push('/dashboard');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating profile:', error);
-      alert(`Error updating profile: ${error.message || error}`);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      alert(`Error updating profile: ${errorMessage}`);
     } finally {
       setSaving(false);
     }
