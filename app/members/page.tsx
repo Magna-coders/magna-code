@@ -79,7 +79,7 @@ export default function FindMembers() {
     const matchesSearch = 
       member.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.bio.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (member.bio && member.bio.toLowerCase().includes(searchTerm.toLowerCase())) ||
       member.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
     
     return matchesSearch;
