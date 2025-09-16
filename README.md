@@ -8,7 +8,7 @@ Now, Magna Coders is evolving into a living ecosystem of skills, collaboration, 
 
 ---
 
-## 🚀 Features (MVP)
+## Features (MVP)
 - **User Profiles** – showcase your skills, portfolio, and availability.  
 - **Directory Search** – find other members by skill, experience, or focus.  
 - **Project Board** – propose ideas, form teams, and collaborate.  
@@ -17,7 +17,7 @@ Now, Magna Coders is evolving into a living ecosystem of skills, collaboration, 
 
 ---
 
-## 🏗 Tech Stack
+##Tech Stack
 - **Frontend:** Next.js (React + TypeScript)  
 - **Styling:** Tailwind CSS  
 - **Backend & Database:** Supabase (Auth, Storage, API, Postgres)  
@@ -25,7 +25,7 @@ Now, Magna Coders is evolving into a living ecosystem of skills, collaboration, 
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ## Getting Started
 
@@ -41,15 +41,25 @@ pnpm dev
 bun dev
 ```
 
-## 🚀 Features (MVP)
+##  Features (MVP)
 - **User Profiles** – showcase your skills, portfolio, and availability.  
 - **Directory Search** – find other members by skill, experience, or focus.  
 - **Project Board** – propose ideas, form teams, and collaborate.  
 - **Collaboration Hub** – direct contact via WhatsApp/Email.  
 - **Notifications** – stay updated on new members, projects, and activities. 
-## Learn More
 
-## Deploy on Vercel
+### Branching Strategy
+- `main` → production only (protected).
+- `qa` → integration branch (protected).
+- `feature/*` → all new features/bugfixes.
+
+**Rules:**
+- No direct commits to `main` or `qa`.
+- All changes go through pull requests.
+- At least 1 review required before merging.
+
+
+## Deployed on Vercel
 
 📜 License
 

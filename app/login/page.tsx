@@ -2,8 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { supabase } from '@/src/lib/supabase/client';
+import { useRouter } from 'next/navigation';
 
 export default function Login() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -26,7 +29,6 @@ export default function Login() {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
 
-    // Validation
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
@@ -36,17 +38,44 @@ export default function Login() {
       newErrors.password = 'Password is required';
     }
 
-    if (Object.keys(newErrors).length === 0) {
-      setIsLoading(true);
-      // Here you would typically make an API call
-      console.log('Login attempt:', formData);
-      // Simulate login delay
-      setTimeout(() => {
-        setIsLoading(false);
-        // Handle successful login or redirect
-      }, 1500);
-    } else {
+    if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      return;
+    }
+
+    setIsLoading(true);
+    setErrors({});
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.user) {
+        // Successful login - redirect to dashboard
+        router.push('/dashboard');
+      }
+    } catch (error: unknown) {
+      console.error('Login error:', error);
+      // Handle specific Supabase errors
+      if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string') {
+        if ((error as any).message.includes('Invalid login credentials')) {
+          setErrors({ submit: 'Invalid email or password.' });
+        } else if ((error as any).message.includes('Email not confirmed')) {
+          setErrors({ submit: 'Please confirm your email before logging in.' });
+        } else {
+          setErrors({ submit: (error as any).message || 'Login failed. Please try again.' });
+        }
+      } else {
+        setErrors({ submit: 'Login failed. Please try again.' });
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -63,12 +92,12 @@ export default function Login() {
             </p>
           </div>
 
-          <div className="border border-[#E70008] rounded-lg p-6 sm:p-8">
+          <div className="bg-[#1a1a1a] rounded-lg p-6 sm:p-8 border border-[#E70008]/20">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Email */}
               <div>
                 <label className="block text-[#F9E4AD] font-mono text-sm font-medium mb-2">
-                  Email Address
+                  Email
                 </label>
                 <input
                   type="email"
@@ -101,57 +130,20 @@ export default function Login() {
                 )}
               </div>
 
-              {/* Remember Me & Forgot Password */}
-              <div className="flex items-center justify-between">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 bg-black border border-[#E70008] rounded text-[#E70008] focus:ring-[#FF9940] focus:ring-offset-black"
-                  />
-                  <span className="ml-2 text-sm text-[#F9E4AD] font-mono">
-                    Remember me
-                  </span>
-                </label>
-                <Link 
-                  href="/forgot-password" 
-                  className="text-sm text-[#FF9940] hover:text-[#E70008] font-mono"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-
               {/* Submit Button */}
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 px-4 bg-[#E70008] hover:bg-[#FF9940] text-black font-mono font-bold rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#FF9940] focus:ring-offset-2 focus:ring-offset-black disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`w-full py-3 px-4 bg-[#E70008] hover:bg-[#FF9940] text-black font-mono font-bold rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#FF9940] focus:ring-offset-2 focus:ring-offset-black disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                {isLoading ? 'Signing in...' : 'Sign In'}
+                {isLoading ? 'Signing In...' : 'Sign In'}
               </button>
+
+              {/* Submit Error */}
+              {errors.submit && (
+                <p className="text-[#E70008] font-mono text-xs mt-2 text-center">{errors.submit}</p>
+              )}
             </form>
-
-            {/* Social Login Options */}
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-[#E70008]/30"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-black text-[#F9E4AD] font-mono">
-                    Or continue with
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <button className="w-full inline-flex justify-center py-2 px-4 border border-[#E70008] rounded-md shadow-sm bg-black text-sm font-medium text-[#F9E4AD] font-mono hover:bg-[#E70008]/10">
-                  GitHub
-                </button>
-                <button className="w-full inline-flex justify-center py-2 px-4 border border-[#E70008] rounded-md shadow-sm bg-black text-sm font-medium text-[#F9E4AD] font-mono hover:bg-[#E70008]/10">
-                  Google
-                </button>
-              </div>
-            </div>
 
             <div className="mt-6 text-center">
               <p className="text-[#F9E4AD] font-mono text-sm">

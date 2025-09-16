@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supabase Test</title>
+</head>
+<body>
+    <h1>Supabase Connection Test</h1>
+    <button onclick="testSupabase()">Test Connection</button>
+    <div id="result"></div>
+
+    <script type="module">
+        // Test script for browser console
+        window.testSupabase = async function() {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                // Create a simple test client (you'll need to add your actual values)
+                const supabaseUrl = prompt('Enter your Supabase URL:', 'https://uzsaaxuifuoimgqjxynz.supabase.co');
+                const supabaseAnonKey = prompt('Enter your Supabase Anon Key:');
+                
+                if (!supabaseUrl || !supabaseAnonKey) {
+                    resultDiv.innerHTML = '<p style="color: red;">Please provide both URL and Key</p>';
+                    return;
+                }
+
+                // Create client
+                const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+                const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+                // Test 1: Check auth
+                resultDiv.innerHTML = '<p>Testing auth...</p>';
+                const { data, error } = await supabase.auth.signUp({
+                    email: 'test-' + Date.now() + '@example.com',
+                    password: 'testpass123'
+                });
+
+                if (error) {
+                    resultDiv.innerHTML = `<p style="color: red;">Auth Error: ${error.message}</p>`;
+                } else {
+                    resultDiv.innerHTML = `<p style="color: green;">✅ Auth working! User ID: ${data.user?.id}</p>`;
+                }
+
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">Connection Error: ${error.message}</p>`;
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,8 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { supabase, TABLES } from '@/src/lib/supabase/client';
+import { useRouter } from 'next/navigation';
 
 export default function CreateAccount() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -13,6 +16,7 @@ export default function CreateAccount() {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
   const [ballPosition, setBallPosition] = useState({ x: 0, y: 0 });
   const [step, setStep] = useState(0);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -21,7 +25,6 @@ export default function CreateAccount() {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -33,7 +36,6 @@ export default function CreateAccount() {
         ? prev.selectedCategories.filter(c => c !== category)
         : [...prev.selectedCategories, category];
       
-      // Remove roles from deselected categories
       const newRoles = prev.selectedRoles.filter(role => {
         const categoryData = roleCategories[category as keyof typeof roleCategories];
         return !categoryData || newCategories.some(cat => 
@@ -82,11 +84,10 @@ export default function CreateAccount() {
     ]
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
 
-    // Validation
     if (!formData.username.trim()) {
       newErrors.username = 'Username is required';
     }
@@ -110,12 +111,102 @@ export default function CreateAccount() {
       newErrors.roles = 'Please select at least one role';
     }
 
-    if (Object.keys(newErrors).length === 0) {
-      // Handle form submission
-      console.log('Form submitted:', formData);
-      // Here you would typically make an API call
-    } else {
+    if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      return;
+    }
+
+    setLoading(true);
+    setErrors({});
+
+    try {
+      // 1. Sign up user with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            username: formData.username,
+          }
+        }
+      });
+
+      if (authError) {
+        throw authError;
+      }
+
+      if (authData.user) {
+        // 2. Insert user profile into users table
+        const { error: profileError } = await supabase
+          .from(TABLES.users)
+          .insert([
+            {
+              id: authData.user.id,
+              username: formData.username,
+              email: formData.email,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }
+          ]);
+
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          throw new Error('Failed to create user profile. Please contact support.');
+        }
+
+        // 3. Insert user categories
+        if (formData.selectedCategories.length > 0) {
+          const categoryData = formData.selectedCategories.map(category => ({
+            user_id: authData.user!.id,
+            category_name: category
+          }));
+
+          const { error: categoryError } = await supabase
+            .from(TABLES.userCategories)
+            .insert(categoryData);
+
+          if (categoryError) {
+            console.error('Category creation error:', categoryError);
+            // Don't throw error for categories, as they're not critical
+          }
+        }
+
+        // 4. Insert user roles
+        if (formData.selectedRoles.length > 0) {
+          const roleData = formData.selectedRoles.map(role => ({
+            user_id: authData.user!.id,
+            role_name: role
+          }));
+
+          const { error: roleError } = await supabase
+            .from(TABLES.userRoles)
+            .insert(roleData);
+
+          if (roleError) {
+            console.error('Role creation error:', roleError);
+            // Don't throw error for roles, as they're not critical
+          }
+        }
+
+        // Success - redirect to dashboard
+        router.push('/dashboard');
+      }
+    } catch (error: unknown) {
+      console.error('Registration error:', error);
+      // Handle specific Supabase errors
+      if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string') {
+        if ((error as any).message.includes('already registered')) {
+          setErrors({ submit: 'An account with this email already exists.' });
+        } else if ((error as any).message.includes('username')) {
+          setErrors({ submit: 'This username is already taken.' });
+        } else {
+          setErrors({ submit: (error as any).message || 'Registration failed. Please try again.' });
+        }
+      } else {
+        setErrors({ submit: 'Registration failed. Please try again.' });
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -128,120 +219,32 @@ export default function CreateAccount() {
     const width = rect.width;
     const height = rect.height;
     const perimeter = 2 * (width + height);
-    const totalSteps = 200; // For smooth movement
+    const totalSteps = 200;
     const segmentLength = perimeter / totalSteps;
-    const speed = segmentLength / 0.05; // 50ms interval
 
     const getPosition = (step: number) => {
       const progress = (step % totalSteps) / totalSteps;
       const totalDistance = progress * perimeter;
 
-      // Top edge: 0 to width
       if (totalDistance <= width) {
         return { x: totalDistance, y: 0 };
-      }
-      // Right edge: width to width + height
-      else if (totalDistance <= width + height) {
+      } else if (totalDistance <= width + height) {
         return { x: width, y: totalDistance - width };
-      }
-      // Bottom edge: width + height to 2*width + height
-      else if (totalDistance <= 2 * width + height) {
+      } else if (totalDistance <= 2 * width + height) {
         return { x: 2 * width + height - totalDistance, y: height };
-      }
-      // Left edge: 2*width + height to 2*(width + height)
-      else {
+      } else {
         return { x: 0, y: 2 * (width + height) - totalDistance };
       }
     };
 
-    // Calculate border visibility (drawing and erasing)
-    const getBorderStyles = (step: number) => {
-      const cycle = Math.floor(step / totalSteps); // 0 for drawing, 1 for erasing
-      const progress = (step % totalSteps) / totalSteps;
-      const totalDistance = progress * perimeter;
-
-      const borders = {
-        top: { width: 0, height: '1px' },
-        right: { width: '1px', height: 0 },
-        bottom: { width: 0, height: '1px' },
-        left: { width: '1px', height: 0 }
-      };
-
-      if (cycle === 0) {
-        // Drawing phase
-        if (totalDistance <= width) {
-          borders.top.width = totalDistance;
-        } else if (totalDistance <= width + height) {
-          borders.top.width = width;
-          borders.right.height = totalDistance - width;
-        } else if (totalDistance <= 2 * width + height) {
-          borders.top.width = width;
-          borders.right.height = height;
-          borders.bottom.width = totalDistance - (width + height);
-        } else {
-          borders.top.width = width;
-          borders.right.height = height;
-          borders.bottom.width = width;
-          borders.left.height = totalDistance - (2 * width + height);
-        }
-      } else {
-        // Erasing phase
-        const eraseDistance = totalDistance;
-        if (eraseDistance <= width) {
-          borders.top.width = width - eraseDistance;
-          borders.right.height = height;
-          borders.bottom.width = width;
-          borders.left.height = height;
-        } else if (eraseDistance <= width + height) {
-          borders.top.width = 0;
-          borders.right.height = height - (eraseDistance - width);
-          borders.bottom.width = width;
-          borders.left.height = height;
-        } else if (eraseDistance <= 2 * width + height) {
-          borders.top.width = 0;
-          borders.right.height = 0;
-          borders.bottom.width = width - (eraseDistance - (width + height));
-          borders.left.height = height;
-        } else {
-          borders.top.width = 0;
-          borders.right.height = 0;
-          borders.bottom.width = 0;
-          borders.left.height = height - (eraseDistance - (2 * width + height));
-        }
-      }
-
-      return borders;
-    };
-
     const interval = setInterval(() => {
-      setStep(prev => (prev + 1) % (totalSteps * 2)); // Double steps for draw + erase cycle
+      setStep(prev => (prev + 1) % (totalSteps * 2));
       const { x, y } = getPosition(step);
       setBallPosition({ x, y });
-    }, 50); // Fast and smooth
-
-    // Update border styles
-    const updateBorders = () => {
-      const borders = getBorderStyles(step);
-      
-      if (containerRef.current) {
-        const topBorder = containerRef.current.querySelector('.border-top') as HTMLElement;
-        const rightBorder = containerRef.current.querySelector('.border-right') as HTMLElement;
-        const bottomBorder = containerRef.current.querySelector('.border-bottom') as HTMLElement;
-        const leftBorder = containerRef.current.querySelector('.border-left') as HTMLElement;
-
-        if (topBorder) topBorder.style.width = `${borders.top.width}px`;
-        if (rightBorder) rightBorder.style.height = `${borders.right.height}px`;
-        if (bottomBorder) bottomBorder.style.width = `${borders.bottom.width}px`;
-        if (leftBorder) leftBorder.style.height = `${borders.left.height}px`;
-      }
-    };
-
-    updateBorders();
-    const borderInterval = setInterval(updateBorders, 50);
+    }, 50);
 
     return () => {
       clearInterval(interval);
-      clearInterval(borderInterval);
     };
   }, [step]);
 
@@ -412,10 +415,16 @@ export default function CreateAccount() {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full py-3 px-4 bg-[#E70008] hover:bg-[#FF9940] text-black font-mono font-bold rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#FF9940] focus:ring-offset-2 focus:ring-offset-black"
+                disabled={loading}
+                className={`w-full py-3 px-4 bg-[#E70008] hover:bg-[#FF9940] text-black font-mono font-bold rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#FF9940] focus:ring-offset-2 focus:ring-offset-black disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                Create Account
+                {loading ? 'Creating Account...' : 'Create Account'}
               </button>
+
+              {/* Submit Error */}
+              {errors.submit && (
+                <p className="text-[#E70008] font-mono text-xs mt-2 text-center">{errors.submit}</p>
+              )}
             </form>
 
             <div className="mt-6 text-center relative z-10">
