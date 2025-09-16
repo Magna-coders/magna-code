@@ -60,7 +60,7 @@ export default function FindMembers() {
         twitter_url: user.twitter_url,
         website_url: user.website_url,
         profile_complete_percentage: user.profile_complete_percentage || 0,
-        skills: user.user_skills?.map((skill: any) => skill.skill_name) || [],
+        skills: user.user_skills?.map((skill: { skill_name: string }) => skill.skill_name) || [],
         availability: user.availability || 'available',
         created_at: user.created_at,
         updated_at: user.updated_at
