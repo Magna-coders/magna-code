@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
+import ChatButton from '@/components/chat/ChatButton';
 
 interface User {
   id: string;
@@ -460,9 +461,18 @@ export default function HomeDashboard() {
                         {update.message}
                       </p>
                       {update.author && (
-                        <p className="text-xs font-mono text-[#FF9940]">
-                          by {update.author}
-                        </p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-mono text-[#FF9940]">
+                            by {update.author}
+                          </p>
+                          <ChatButton
+                            targetUserId={update.author === "John Doe" ? "john-doe-id" : "sarah-chen-id"}
+                            targetUsername={update.author || "User"}
+                            size="small"
+                            showLabel={true}
+                            className="ml-2"
+                          />
+                        </div>
                       )}
                     </div>
                     <span className="text-xs font-mono text-[#F9E4AD]/60">
@@ -517,6 +527,62 @@ export default function HomeDashboard() {
             </div>
           </section>
         </div>
+
+        {/* Chat Section */}
+        <section className="mt-8">
+          <h3 className="text-2xl font-bold font-mono text-[#F9E4AD] mb-4">
+            Quick Chat
+          </h3>
+          <div className="bg-[#E70008]/5 border border-[#E70008]/20 rounded-lg p-6">
+            <p className="text-[#F9E4AD] font-mono mb-4">
+              Connect with other members instantly. Click on any member to start a conversation.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="bg-black border border-[#E70008]/30 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-mono text-[#F9E4AD] font-semibold">John Doe</h4>
+                    <p className="text-xs text-[#F9E4AD]/60">Full Stack Developer</p>
+                  </div>
+                  <ChatButton
+                    targetUserId="john-doe-id"
+                    targetUsername="John Doe"
+                    size="small"
+                    showLabel={true}
+                  />
+                </div>
+              </div>
+              <div className="bg-black border border-[#E70008]/30 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-mono text-[#F9E4AD] font-semibold">Sarah Chen</h4>
+                    <p className="text-xs text-[#F9E4AD]/60">UI/UX Designer</p>
+                  </div>
+                  <ChatButton
+                    targetUserId="sarah-chen-id"
+                    targetUsername="Sarah Chen"
+                    size="small"
+                    showLabel={true}
+                  />
+                </div>
+              </div>
+              <div className="bg-black border border-[#E70008]/30 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-mono text-[#F9E4AD] font-semibold">Mike Johnson</h4>
+                    <p className="text-xs text-[#F9E4AD]/60">DevOps Engineer</p>
+                  </div>
+                  <ChatButton
+                    targetUserId="mike-johnson-id"
+                    targetUsername="Mike Johnson"
+                    size="small"
+                    showLabel={true}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
       {/* Create Project Modal */}
