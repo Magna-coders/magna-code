@@ -200,22 +200,21 @@ export default function FindMembers() {
             {filteredMembers.map((member) => (
               <div 
                 key={member.id} 
-                className="group relative bg-gradient-to-br from-[#E70008]/5 via-black to-[#FF9940]/5 rounded-xl p-6 border border-[#E70008]/20 hover:border-[#FF9940]/40 transition-all duration-500 hover:shadow-2xl hover:shadow-[#E70008]/30 backdrop-blur-sm overflow-hidden"
+                className="group relative bg-black rounded-xl p-6 border-2 border-gray-800 hover:border-gray-700 transition-all duration-500 hover:shadow-2xl hover:shadow-black/60 overflow-hidden"
               >
-                {/* Modern gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-[#E70008]/5 via-transparent to-[#FF9940]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                {/* Removed gradient overlay for solid black background */}
                 
                 {/* Modern avatar with glow effect */}
                 <div className="relative mb-5">
                   <div className="flex items-center space-x-4">
                     <div className="relative">
-                      <div className="absolute -inset-1 bg-gradient-to-r from-[#E70008] to-[#FF9940] rounded-full blur opacity-0 group-hover:opacity-75 transition-opacity duration-500"></div>
+                      <div className="absolute -inset-1 bg-gradient-to-r from-[#E70008] to-[#E70008]/80 rounded-full blur opacity-0 group-hover:opacity-75 transition-opacity duration-500"></div>
                       <img
-                        src={member.avatar_url}
-                        alt={member.username}
-                        className="relative w-20 h-20 rounded-full border-2 border-[#E70008]/50 group-hover:border-[#FF9940] transition-all duration-500 object-cover"
-                        loading="lazy"
-                      />
+                          src={member.avatar_url}
+                          alt={member.username}
+                          className="relative w-20 h-20 rounded-full border-4 border-black group-hover:border-[#E70008] transition-all duration-500 object-cover"
+                          loading="lazy"
+                        />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-2xl font-bold bg-gradient-to-r from-[#F9E4AD] to-[#FF9940] bg-clip-text text-transparent group-hover:from-white group-hover:to-[#F9E4AD] transition-all duration-300">
