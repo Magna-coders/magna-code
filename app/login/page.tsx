@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { supabase } from '@/src/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { sanitizeEmail, sanitizeInput, validateFormInput } from '@/src/lib/sanitization';
 
 export default function Login() {
   const router = useRouter();
@@ -18,7 +19,21 @@ export default function Login() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Sanitize input based on field type
+    let sanitizedValue = value;
+    
+    if (name === 'email') {
+      // For email, only allow safe characters and limit length
+      sanitizedValue = sanitizeInput(value, 254); // Max email length is 254
+    } else if (name === 'password') {
+      // For password, just limit length (don't sanitize content)
+      if (value.length > 128) {
+        sanitizedValue = value.substring(0, 128);
+      }
+    }
+    
+    setFormData(prev => ({ ...prev, [name]: sanitizedValue }));
     
     // Clear error when user starts typing
     if (errors[name]) {
@@ -30,13 +45,21 @@ export default function Login() {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+    // Sanitize and validate email
+    try {
+      const emailValidation = validateFormInput('email', formData.email, 'email');
+      if (!emailValidation.isValid) {
+        newErrors.email = emailValidation.error || 'Invalid email';
+      }
+    } catch (error) {
+      newErrors.email = error instanceof Error ? error.message : 'Invalid email';
     }
-    if (!formData.password) {
+
+    // Validate password
+    if (!formData.password || formData.password.trim() === '') {
       newErrors.password = 'Password is required';
+    } else if (formData.password.length > 128) {
+      newErrors.password = 'Password is too long';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -48,9 +71,17 @@ export default function Login() {
     setErrors({});
 
     try {
+      // Sanitize inputs before sending to Supabase
+      const sanitizedEmail = sanitizeEmail(formData.email);
+      const sanitizedPassword = formData.password; // Don't sanitize password, just validate length
+      
+      if (sanitizedPassword.length > 128) {
+        throw new Error('Password is too long');
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
+        email: sanitizedEmail,
+        password: sanitizedPassword,
       });
 
       if (error) {

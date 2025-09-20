@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase, TABLES } from '@/src/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { sanitizeEmail, sanitizeUsername, sanitizeInput, validateFormInput } from '@/src/lib/sanitization';
 
 export default function CreateAccount() {
   const router = useRouter();
@@ -23,7 +24,26 @@ export default function CreateAccount() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Sanitize input based on field type
+    let sanitizedValue = value;
+    
+    if (name === 'username') {
+      // For username, only allow alphanumeric, underscores, and hyphens
+      sanitizedValue = sanitizeInput(value, 30);
+      // Remove any characters that aren't allowed in usernames
+      sanitizedValue = sanitizedValue.replace(/[^a-zA-Z0-9_-]/g, '');
+    } else if (name === 'email') {
+      // For email, sanitize and limit length
+      sanitizedValue = sanitizeInput(value, 254);
+    } else if (name === 'password' || name === 'confirmPassword') {
+      // For passwords, just limit length (don't sanitize content)
+      if (value.length > 128) {
+        sanitizedValue = value.substring(0, 128);
+      }
+    }
+    
+    setFormData(prev => ({ ...prev, [name]: sanitizedValue }));
     
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -88,19 +108,35 @@ export default function CreateAccount() {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
 
-    if (!formData.username.trim()) {
-      newErrors.username = 'Username is required';
+    // Validate and sanitize username
+    try {
+      const usernameValidation = validateFormInput('username', formData.username, 'username');
+      if (!usernameValidation.isValid) {
+        newErrors.username = usernameValidation.error || 'Invalid username';
+      }
+    } catch (error) {
+      newErrors.username = error instanceof Error ? error.message : 'Invalid username';
     }
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+
+    // Validate and sanitize email
+    try {
+      const emailValidation = validateFormInput('email', formData.email, 'email');
+      if (!emailValidation.isValid) {
+        newErrors.email = emailValidation.error || 'Invalid email';
+      }
+    } catch (error) {
+      newErrors.email = error instanceof Error ? error.message : 'Invalid email';
     }
+
+    // Validate password
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
+    } else if (formData.password.length > 128) {
+      newErrors.password = 'Password is too long';
     }
+
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
@@ -120,13 +156,22 @@ export default function CreateAccount() {
     setErrors({});
 
     try {
+      // Sanitize inputs before database operations
+      const sanitizedEmail = sanitizeEmail(formData.email);
+      const sanitizedUsername = sanitizeUsername(formData.username);
+      const sanitizedPassword = formData.password; // Don't sanitize password, just validate
+      
+      // Sanitize categories and roles
+      const sanitizedCategories = formData.selectedCategories.map(cat => sanitizeInput(cat, 50));
+      const sanitizedRoles = formData.selectedRoles.map(role => sanitizeInput(role, 50));
+
       // 1. Sign up user with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
+        email: sanitizedEmail,
+        password: sanitizedPassword,
         options: {
           data: {
-            username: formData.username,
+            username: sanitizedUsername,
           }
         }
       });
@@ -142,8 +187,8 @@ export default function CreateAccount() {
           .insert([
             {
               id: authData.user.id,
-              username: formData.username,
-              email: formData.email,
+              username: sanitizedUsername,
+              email: sanitizedEmail,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             }
@@ -155,8 +200,8 @@ export default function CreateAccount() {
         }
 
         // 3. Insert user categories
-        if (formData.selectedCategories.length > 0) {
-          const categoryData = formData.selectedCategories.map(category => ({
+        if (sanitizedCategories.length > 0) {
+          const categoryData = sanitizedCategories.map(category => ({
             user_id: authData.user!.id,
             category_name: category
           }));
@@ -172,8 +217,8 @@ export default function CreateAccount() {
         }
 
         // 4. Insert user roles
-        if (formData.selectedRoles.length > 0) {
-          const roleData = formData.selectedRoles.map(role => ({
+        if (sanitizedRoles.length > 0) {
+          const roleData = sanitizedRoles.map(role => ({
             user_id: authData.user!.id,
             role_name: role
           }));
