@@ -91,21 +91,36 @@ export default function MessagesPage() {
       }
 
       // Transform the data to match the Conversation interface
-      const transformedData: Conversation[] = (data as any[] || []).map((conv: any) => ({
-        id: conv.id as string,
-        type: conv.type as 'direct' | 'group',
-        participants: (conv.participants as any[])?.map((p: any) => ({
-          user_id: p.user_id as string,
-          users: (p.users as any[])[0] as User // The users array should contain the user object
-        })) || [],
-        last_message: (conv.last_message as any[])?.[0] ? {
-          id: (conv.last_message as any[])[0].id as string,
-          sender_id: (conv.last_message as any[])[0].sender_id as string,
-          content: (conv.last_message as any[])[0].content as string,
-          created_at: (conv.last_message as any[])[0].created_at as string,
-          sender: ((conv.last_message as any[])[0].sender as any[])?.[0] as User | undefined// sender is also an array from Supabase
+    const transformedData: Conversation[] = (data as unknown as Conversation[] || []).map((conv: unknown) => {
+      const conversation = conv as {
+        id: string;
+        type: 'direct' | 'group';
+        participants: unknown[];
+        last_message?: unknown[];
+      };
+      
+      return {
+        id: conversation.id,
+        type: conversation.type,
+        participants: (conversation.participants as unknown[] || []).map((p: unknown) => {
+          const participant = p as {
+            user_id: string;
+            users: unknown[];
+          };
+          return {
+            user_id: participant.user_id,
+            users: (participant.users as unknown[])[0] as User
+          };
+        }),
+        last_message: conversation.last_message?.[0] ? {
+          id: (conversation.last_message[0] as { id: string }).id,
+          sender_id: (conversation.last_message[0] as { sender_id: string }).sender_id,
+          content: (conversation.last_message[0] as { content: string }).content,
+          created_at: (conversation.last_message[0] as { created_at: string }).created_at,
+          sender: ((conversation.last_message[0] as { sender: unknown[] }).sender?.[0] as User | undefined)
         } : undefined
-      }));
+      };
+    });
 
       setConversations(transformedData);
 
@@ -137,13 +152,23 @@ export default function MessagesPage() {
     }
 
     // Transform the data to match the Message interface
-    const transformedMessages: Message[] = (data as any[] || []).map((msg: any) => ({
-      id: msg.id as string,
-      sender_id: msg.sender_id as string,
-      content: msg.content as string,
-      created_at: msg.created_at as string,
-      sender: (msg.sender as any[])?.[0] as User | undefined
-    }));
+    const transformedMessages: Message[] = (data as unknown as Message[] || []).map((msg: unknown) => {
+      const message = msg as {
+        id: string;
+        sender_id: string;
+        content: string;
+        created_at: string;
+        sender: unknown[];
+      };
+      
+      return {
+        id: message.id,
+        sender_id: message.sender_id,
+        content: message.content,
+        created_at: message.created_at,
+        sender: (message.sender as unknown[])?.[0] as User | undefined
+      };
+    });
     
     setMessages(transformedMessages);
   };
@@ -171,7 +196,22 @@ export default function MessagesPage() {
       return;
     }
 
-    setMessages((prev) => [...prev, data as unknown as Message]);
+    // Transform the new message data to match Message interface
+    const transformedMessage: Message = {
+      id: data.id as string,
+      sender_id: data.sender_id as string,
+      content: data.content as string,
+      created_at: data.created_at as string,
+      sender: data.sender && Array.isArray(data.sender) && data.sender.length > 0 
+        ? {
+            id: data.sender[0].id as string,
+            username: data.sender[0].username as string,
+            avatar_url: data.sender[0].avatar_url as string | null
+          }
+        : undefined
+    };
+    
+    setMessages((prev) => [...prev, transformedMessage]);
     setNewMessage("");
     setSending(false);
   };
