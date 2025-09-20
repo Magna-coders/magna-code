@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, User } from "@supabase/supabase-js";
 import { useRouter } from 'next/navigation';
 
 interface Friend {
@@ -35,7 +35,7 @@ export default function FriendsList() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [connectionRequests, setConnectionRequests] = useState<ConnectionRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -309,7 +309,7 @@ export default function FriendsList() {
                         )}
                         {request.message && (
                           <p className="text-sm font-mono text-[#F9E4AD] italic bg-black/30 p-3 rounded-md border-l-4 border-[#FF9940]">
-                            "{request.message}"
+                            &ldquo;{request.message}&rdquo;
                           </p>
                         )}
                         <p className="text-xs font-mono text-[#FF9940] mt-2">
