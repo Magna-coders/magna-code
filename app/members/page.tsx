@@ -247,6 +247,22 @@ export default function MembersPage() {
             </button>
             <h1 className="text-2xl font-bold font-mono text-[#E70008]">Magna Coders</h1>
           </div>
+          
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden text-[#F9E4AD] hover:text-[#FF9940] transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {mobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
+
+          {/* Desktop navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             <a href="/dashboard" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
               Dashboard
@@ -262,6 +278,26 @@ export default function MembersPage() {
             </a>
           </nav>
         </div>
+
+        {/* Mobile navigation */}
+        {mobileMenuOpen && (
+          <nav className="md:hidden border-t border-[#E70008]/20 bg-black">
+            <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
+              <a href="/dashboard" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
+                Dashboard
+              </a>
+              <a href="/friends" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
+                Friends
+              </a>
+              <a href="/messages" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
+                Messages
+              </a>
+              <a href="/members" className="text-[#FF9940] font-mono border-l-2 border-[#FF9940] pl-3">
+                Members
+              </a>
+            </div>
+          </nav>
+        )}
       </header>
 
       <main className="container mx-auto px-3 py-4 sm:px-4 sm:py-8">
