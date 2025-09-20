@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 
 interface Member {
@@ -26,7 +26,7 @@ const supabase = createClient(
 
 export default function MembersPage() {
   const [members, setMembers] = useState<Member[]>([]);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null);
   const [connections, setConnections] = useState<Record<string, ConnectionStatus>>({});
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -137,7 +137,12 @@ export default function MembersPage() {
       return;
     }
 
-    router.push(`/messages?conversation=${data.id}`);
+    if (data && typeof data === 'object' && 'id' in data) {
+      router.push(`/messages?conversation=${(data as { id: string }).id}`);
+    } else {
+      console.error("Invalid response from conversation creation");
+      alert("Failed to open chat - invalid response.");
+    }
   };
 
   const renderButton = (memberId: string) => {
