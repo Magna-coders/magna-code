@@ -26,6 +26,8 @@ const supabase = createClient(
 
 export default function MembersPage() {
   const [members, setMembers] = useState<Member[]>([]);
+  const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null);
   const [connections, setConnections] = useState<Record<string, ConnectionStatus>>({});
   const [loading, setLoading] = useState(true);
@@ -50,6 +52,45 @@ export default function MembersPage() {
     setCurrentUser(user);
     fetchMembers(user.id);
   };
+
+  // Search filter function
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredMembers(members);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const filtered = members.filter((member) => {
+      // Search in username
+      if (member.username.toLowerCase().includes(query)) return true;
+      
+      // Search in email
+      if (member.email.toLowerCase().includes(query)) return true;
+      
+      // Search in bio
+      if (member.bio?.toLowerCase().includes(query)) return true;
+      
+      // Search in location
+      if (member.location?.toLowerCase().includes(query)) return true;
+      
+      // Search in availability
+      if (member.availability?.toLowerCase().includes(query)) return true;
+      
+      // Search in categories
+      if (member.user_categories?.some(cat => cat.category_name.toLowerCase().includes(query))) return true;
+      
+      // Search in roles
+      if (member.user_roles?.some(role => role.role_name.toLowerCase().includes(query))) return true;
+      
+      // Search in skills
+      if (member.user_skills?.some(skill => skill.skill_name.toLowerCase().includes(query))) return true;
+      
+      return false;
+    });
+    
+    setFilteredMembers(filtered);
+  }, [searchQuery, members]);
 
   const fetchMembers = async (userId: string) => {
     // Fetch all members except current user
@@ -94,6 +135,7 @@ export default function MembersPage() {
 
     setConnections(statusMap);
     setMembers(allMembers || []);
+    setFilteredMembers(allMembers || []);
     setLoading(false);
   };
 
@@ -193,7 +235,18 @@ export default function MembersPage() {
     <div className="min-h-screen bg-black">
       <header className="border-b border-[#E70008]/20">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold font-mono text-[#E70008]">Magna Coders</h1>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="flex items-center text-[#F9E4AD] hover:text-[#FF9940] transition-colors font-mono"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back
+            </button>
+            <h1 className="text-2xl font-bold font-mono text-[#E70008]">Magna Coders</h1>
+          </div>
           <nav className="hidden md:flex items-center space-x-6">
             <a href="/dashboard" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
               Dashboard
@@ -214,11 +267,51 @@ export default function MembersPage() {
       <main className="container mx-auto px-3 py-4 sm:px-4 sm:py-8">
         <h2 className="text-2xl sm:text-3xl font-bold font-mono text-[#F9E4AD] mb-4 sm:mb-6">Community Members</h2>
 
-        {members.length === 0 ? (
-          <p className="text-[#F9E4AD]/60 font-mono text-sm sm:text-base">No members found.</p>
+        {/* Search Section */}
+        <div className="mb-6 sm:mb-8">
+          <div className="relative max-w-md mx-auto">
+            <input
+              type="text"
+              placeholder="Search by name, category, role, location..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[#1a1a1a] border border-[#FF9940]/30 rounded-lg px-4 py-3 pl-10 text-[#F9E4AD] font-mono placeholder-[#F9E4AD]/50 focus:outline-none focus:border-[#E70008] focus:ring-1 focus:ring-[#E70008] transition-colors"
+            />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-[#F9E4AD]/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#F9E4AD]/60 hover:text-[#F9E4AD] transition-colors"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+         </div>
+
+        {filteredMembers.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-[#F9E4AD]/60 font-mono text-sm sm:text-base mb-2">
+              {searchQuery ? `No members found for "${searchQuery}"` : "No members found."}
+            </p>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="text-[#FF9940] hover:text-[#E70008] font-mono text-sm underline transition-colors"
+              >
+                Clear search
+              </button>
+            )}
+          </div>
         ) : (
           <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {members.map((member) => (
+             {filteredMembers.map((member) => (
               <div
                 key={member.id}
                 className="bg-[#1a1a1a] border border-[#FF9940]/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg hover:border-[#E70008] transition-all duration-300"
