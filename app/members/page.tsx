@@ -29,6 +29,7 @@ export default function MembersPage() {
   const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null);
   const [connections, setConnections] = useState<Record<string, ConnectionStatus>>({});
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -210,36 +211,36 @@ export default function MembersPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <h2 className="text-3xl font-bold font-mono text-[#F9E4AD] mb-6">Community Members</h2>
+      <main className="container mx-auto px-3 py-4 sm:px-4 sm:py-8">
+        <h2 className="text-2xl sm:text-3xl font-bold font-mono text-[#F9E4AD] mb-4 sm:mb-6">Community Members</h2>
 
         {members.length === 0 ? (
-          <p className="text-[#F9E4AD]/60 font-mono">No members found.</p>
+          <p className="text-[#F9E4AD]/60 font-mono text-sm sm:text-base">No members found.</p>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {members.map((member) => (
               <div
                 key={member.id}
-                className="bg-[#1a1a1a] border border-[#FF9940]/30 rounded-2xl p-6 flex flex-col justify-between hover:shadow-lg hover:border-[#E70008] transition-all duration-300"
+                className="bg-[#1a1a1a] border border-[#FF9940]/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg hover:border-[#E70008] transition-all duration-300"
               >
                 <div>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-[#FF9940]/20 rounded-full flex items-center justify-center text-2xl font-mono text-[#F9E4AD]">
+                  <div className="flex items-center space-x-3 sm:space-x-4">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#FF9940]/20 rounded-full flex items-center justify-center text-lg sm:text-2xl font-mono text-[#F9E4AD] flex-shrink-0">
                       {member.avatar_url ? (
                         <img
                           src={member.avatar_url}
                           alt={member.username}
-                          className="w-16 h-16 rounded-full object-cover"
+                          className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover"
                         />
                       ) : (
                         member.username.charAt(0).toUpperCase()
                       )}
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold font-mono text-[#F9E4AD]">{member.username}</h3>
-                      <p className="text-sm font-mono text-[#F9E4AD]/60">{member.email}</p>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-lg sm:text-xl font-bold font-mono text-[#F9E4AD] truncate">{member.username}</h3>
+                      <p className="text-xs sm:text-sm font-mono text-[#F9E4AD]/60 truncate">{member.email}</p>
                       {member.bio && (
-                        <p className="text-sm font-mono text-[#F9E4AD]/80 mt-1 line-clamp-2">{member.bio}</p>
+                        <p className="text-xs sm:text-sm font-mono text-[#F9E4AD]/80 mt-1 line-clamp-2">{member.bio}</p>
                       )}
                     </div>
                   </div>
