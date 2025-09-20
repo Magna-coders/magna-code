@@ -21,7 +21,7 @@ interface Message {
   sender_id: string;
   content: string;
   created_at: string;
-  sender: User;
+  sender?: User;
 }
 
 interface Conversation {
@@ -90,10 +90,27 @@ export default function MessagesPage() {
         return;
       }
 
-      setConversations(data || []);
+      // Transform the data to match the Conversation interface
+      const transformedData: Conversation[] = (data as any[] || []).map((conv: any) => ({
+        id: conv.id as string,
+        type: conv.type as 'direct' | 'group',
+        participants: (conv.participants as any[])?.map((p: any) => ({
+          user_id: p.user_id as string,
+          users: (p.users as any[])[0] as User // The users array should contain the user object
+        })) || [],
+        last_message: (conv.last_message as any[])?.[0] ? {
+          id: (conv.last_message as any[])[0].id as string,
+          sender_id: (conv.last_message as any[])[0].sender_id as string,
+          content: (conv.last_message as any[])[0].content as string,
+          created_at: (conv.last_message as any[])[0].created_at as string,
+          sender: ((conv.last_message as any[])[0].sender as any[])?.[0] as User | undefined// sender is also an array from Supabase
+        } : undefined
+      }));
+
+      setConversations(transformedData);
 
       if (conversationId) {
-        const found = data?.find((c) => c.id === conversationId);
+        const found = transformedData.find((c) => c.id === conversationId);
         if (found) {
           setSelectedConversation(found);
           fetchMessages(found.id);
@@ -119,7 +136,16 @@ export default function MessagesPage() {
       return;
     }
 
-    setMessages(data || []);
+    // Transform the data to match the Message interface
+    const transformedMessages: Message[] = (data as any[] || []).map((msg: any) => ({
+      id: msg.id as string,
+      sender_id: msg.sender_id as string,
+      content: msg.content as string,
+      created_at: msg.created_at as string,
+      sender: (msg.sender as any[])?.[0] as User | undefined
+    }));
+    
+    setMessages(transformedMessages);
   };
 
   // 4. Send message
@@ -145,7 +171,7 @@ export default function MessagesPage() {
       return;
     }
 
-    setMessages((prev) => [...prev, data as Message]);
+    setMessages((prev) => [...prev, data as unknown as Message]);
     setNewMessage("");
     setSending(false);
   };
@@ -171,164 +197,193 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-black text-white">
-      {/* Sidebar */}
-      <div className="w-80 bg-[#111] border-r border-[#333]">
-        <div className="p-4 border-b border-[#333]">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-[#F9E4AD]">Conversations</h2>
-            <button
-              onClick={() => window.location.href = '/dashboard'}
-              className="bg-[#FF9940] text-black px-3 py-1 rounded-lg hover:bg-[#E70008] transition-colors text-sm"
-            >
-              Dashboard
-            </button>
-          </div>
-        </div>
-        <div className="overflow-y-auto h-[calc(100%-65px)]">
-          {conversations.length === 0 && (
-            <div className="p-4 text-center text-gray-400">
-              <p>No conversations yet</p>
-            </div>
-          )}
-
-          {conversations.map((conv) => {
-            const friendParticipant = conv.participants.find(
-              (p) => p.user_id !== currentUser?.id
-            );
-            const friendUser = friendParticipant?.users;
-
-            return (
-              <div
-                key={conv.id}
-                onClick={() => selectConversation(conv)}
-                className={`p-4 border-b border-[#333] cursor-pointer hover:bg-[#222] transition-colors ${
-                  selectedConversation?.id === conv.id ? "bg-[#222]" : ""
-                }`}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-[#FF9940]/20 flex items-center justify-center overflow-hidden">
-                    {friendUser?.avatar_url ? (
-                      <img
-                        src={friendUser.avatar_url}
-                        alt={friendUser.username}
-                        className="w-full h-full object-cover rounded-full"
-                      />
-                    ) : (
-                      friendUser?.username?.charAt(0).toUpperCase() || "?"
-                    )}
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-medium text-[#F9E4AD]">
-                      {friendUser?.username || "Unknown"}
-                    </span>
-                    {conv.last_message && (
-                      <span className="text-xs text-[#FF9940] truncate max-w-[200px]">
-                        {conv.last_message.content}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+    <div className="min-h-screen bg-black text-white">
+      {/* Mobile Header */}
+      <div className="md:hidden bg-[#111] border-b border-[#333] p-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-semibold text-[#F9E4AD]">Messages</h1>
+          <button
+            onClick={() => window.location.href = '/dashboard'}
+            className="bg-[#FF9940] text-black px-3 py-1 rounded-lg hover:bg-[#E70008] transition-colors text-sm"
+          >
+            Dashboard
+          </button>
         </div>
       </div>
 
-      {/* Chat window */}
-      <div className="flex-1 flex flex-col">
-        {selectedConversation ? (
-          <>
-            {/* Header with Back Button */}
-            <div className="flex items-center justify-between bg-[#111] border-b border-[#333] p-4">
+      <div className="flex min-h-[calc(100vh-64px)] md:min-h-screen">
+        {/* Sidebar - Hidden on mobile when conversation is selected */}
+        <div className={`w-full md:w-80 bg-[#111] border-r border-[#333] ${
+          selectedConversation ? 'hidden md:block' : 'block'
+        }`}>
+          <div className="hidden md:block p-4 border-b border-[#333]">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-[#F9E4AD]">Conversations</h2>
               <button
-                onClick={goBack}
-                className="bg-[#FF9940] text-black px-4 py-1 rounded-lg hover:bg-[#E70008] transition-colors"
+                onClick={() => window.location.href = '/dashboard'}
+                className="bg-[#FF9940] text-black px-3 py-1 rounded-lg hover:bg-[#E70008] transition-colors text-sm"
               >
-                ← Back
+                Dashboard
               </button>
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-[#FF9940]/20 flex items-center justify-center overflow-hidden">
-                  {selectedConversation.participants.find(p => p.user_id !== currentUser?.id)?.users.avatar_url ? (
-                    <img
-                      src={selectedConversation.participants.find(p => p.user_id !== currentUser?.id)?.users.avatar_url}
-                      alt={selectedConversation.participants.find(p => p.user_id !== currentUser?.id)?.users.username}
-                      className="w-full h-full object-cover rounded-full"
-                    />
-                  ) : (
-                    selectedConversation.participants.find(p => p.user_id !== currentUser?.id)?.users.username?.charAt(0).toUpperCase() || "?"
-                  )}
-                </div>
-                <span className="font-medium text-[#F9E4AD]">
-                  {selectedConversation.participants.find(p => p.user_id !== currentUser?.id)?.users.username || "Unknown"}
-                </span>
-              </div>
             </div>
+          </div>
+          <div className="overflow-y-auto h-[calc(100%-65px)]">
+            {conversations.length === 0 && (
+              <div className="p-4 text-center text-gray-400">
+                <p>No conversations yet</p>
+              </div>
+            )}
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.length === 0 && (
-                <p className="text-center text-gray-400">
-                  No messages yet. Start the conversation!
-                </p>
-              )}
+            {conversations.map((conv) => {
+              const friendParticipant = conv.participants.find(
+                (p) => p.user_id !== currentUser?.id
+              );
+              const friendUser = friendParticipant?.users;
 
-              {messages.map((msg) => (
+              return (
                 <div
-                  key={msg.id}
-                  className={`flex ${
-                    msg.sender_id === currentUser?.id
-                      ? "justify-end"
-                      : "justify-start"
+                  key={conv.id}
+                  onClick={() => selectConversation(conv)}
+                  className={`p-4 border-b border-[#333] cursor-pointer hover:bg-[#222] transition-colors ${
+                    selectedConversation?.id === conv.id ? "bg-[#222]" : ""
                   }`}
                 >
-                  <div
-                    className={`max-w-xs lg:max-w-md xl:max-w-lg px-4 py-2 rounded-lg ${
-                      msg.sender_id === currentUser?.id
-                        ? "bg-[#E70008] text-white"
-                        : "bg-[#222] text-[#F9E4AD]"
-                    }`}
-                  >
-                    {msg.sender_id !== currentUser?.id && (
-                      <p className="text-xs text-[#FF9940] mb-1">
-                        {msg.sender.username}
-                      </p>
-                    )}
-                    <p className="text-sm">{msg.content}</p>
-                    <p className="text-xs mt-1 opacity-70">
-                      {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
-                    </p>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 md:w-10 md:h-10 rounded-full bg-[#FF9940]/20 flex items-center justify-center overflow-hidden">
+                      {friendUser?.avatar_url ? (
+                        <img
+                          src={friendUser.avatar_url}
+                          alt={friendUser.username}
+                          className="w-full h-full object-cover rounded-full"
+                        />
+                      ) : (
+                        friendUser?.username?.charAt(0).toUpperCase() || "?"
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="font-medium text-[#F9E4AD] block">
+                        {friendUser?.username || "Unknown"}
+                      </span>
+                      {conv.last_message && (
+                        <span className="text-xs text-[#FF9940] truncate block max-w-[200px] md:max-w-[180px]">
+                          {conv.last_message.content}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-
-            {/* Input */}
-            <form onSubmit={sendMessage} className="bg-[#111] border-t border-[#333] p-4">
-              <div className="flex space-x-4">
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type a message..."
-                  className="flex-1 bg-[#222] text-[#F9E4AD] rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9940]"
-                  disabled={sending}
-                />
-                <button
-                  type="submit"
-                  disabled={!newMessage.trim() || sending}
-                  className="bg-[#E70008] hover:bg-[#FF9940] text-white px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {sending ? "Sending..." : "Send"}
-                </button>
-              </div>
-            </form>
-          </>
-        ) : (
-          <div className="flex items-center justify-center h-full text-[#F9E4AD]">
-            <p>Select a conversation to start chatting</p>
+              );
+            })}
           </div>
-        )}
+        </div>
+
+        {/* Chat window - Full width on mobile */}
+        <div className={`flex-1 flex flex-col ${
+          selectedConversation ? 'block' : 'hidden md:block'
+        }`}>
+          {selectedConversation ? (
+            <>
+              {/* Header with Back Button */}
+              <div className="flex items-center justify-between bg-[#111] border-b border-[#333] p-3 md:p-4">
+                <button
+                  onClick={goBack}
+                  className="md:hidden bg-[#FF9940] hover:bg-[#E70008] text-white px-3 py-1 rounded-lg transition-colors text-sm"
+                >
+                  ← Back
+                </button>
+                <div className="flex items-center space-x-3 flex-1 justify-center md:justify-start">
+                  {(() => {
+                    const otherParticipant = selectedConversation.participants.find(p => p.user_id !== currentUser?.id);
+                    const otherUser = otherParticipant?.users;
+                    const avatarUrl = otherUser?.avatar_url;
+                    
+                    return (
+                      <>
+                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#FF9940]/20 flex items-center justify-center overflow-hidden">
+                          {avatarUrl ? (
+                            <img
+                              src={avatarUrl}
+                              alt={otherUser?.username || "User"}
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          ) : (
+                            otherUser?.username?.charAt(0).toUpperCase() || "?"
+                          )}
+                        </div>
+                        <span className="font-medium text-[#F9E4AD] text-sm md:text-base">
+                          {otherUser?.username || "Unknown"}
+                        </span>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4">
+                {messages.length === 0 && (
+                  <p className="text-center text-gray-400 text-sm md:text-base">
+                    No messages yet. Start the conversation!
+                  </p>
+                )}
+
+                {messages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex ${
+                      msg.sender_id === currentUser?.id
+                        ? "justify-end"
+                        : "justify-start"
+                    }`}
+                  >
+                    <div
+                      className={`max-w-[70%] md:max-w-xs lg:max-w-md xl:max-w-lg px-3 py-2 md:px-4 md:py-2 rounded-lg ${
+                        msg.sender_id === currentUser?.id
+                          ? "bg-[#E70008] text-white"
+                          : "bg-[#222] text-[#F9E4AD]"
+                      }`}
+                    >
+                      {msg.sender_id !== currentUser?.id && msg.sender && (
+                        <p className="text-xs text-[#FF9940] mb-1">
+                          {msg.sender.username}
+                        </p>
+                      )}
+                      <p className="text-sm md:text-base">{msg.content}</p>
+                      <p className="text-xs mt-1 opacity-70">
+                        {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Input */}
+              <form onSubmit={sendMessage} className="bg-[#111] border-t border-[#333] p-3 md:p-4">
+                <div className="flex space-x-2 md:space-x-4">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type a message..."
+                    className="flex-1 bg-[#222] text-[#F9E4AD] rounded-lg px-3 py-2 md:px-4 md:py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9940] text-sm md:text-base"
+                    disabled={sending}
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newMessage.trim() || sending}
+                    className="bg-[#E70008] hover:bg-[#FF9940] text-white px-4 py-2 md:px-6 md:py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
+                  >
+                    {sending ? "Sending..." : "Send"}
+                  </button>
+                </div>
+              </form>
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-full text-[#F9E4AD] p-4">
+              <p className="text-center text-sm md:text-base">Select a conversation to start chatting</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
