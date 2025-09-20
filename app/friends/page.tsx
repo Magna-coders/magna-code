@@ -45,12 +45,10 @@ export default function FriendsList() {
   const fetchCurrentUser = async () => {
     try {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
-      
       if (authError || !user) {
         router.push('/login');
         return;
       }
-
       setCurrentUser(user);
       fetchFriends(user.id);
       fetchConnectionRequests(user.id);
@@ -62,7 +60,6 @@ export default function FriendsList() {
 
   const fetchFriends = async (userId: string) => {
     try {
-      // Fetch actual friends from the database using the user_friends view
       const { data, error } = await supabase
         .from('user_friends')
         .select('*')
@@ -93,29 +90,8 @@ export default function FriendsList() {
     }
   };
 
-  const handleFriendClick = (friendId: string) => {
-    router.push(`/messages?friend=${friendId}`);
-  };
-
-  const handleStartChat = (friendId: string) => {
-    router.push(`/messages?conversation=${friendId}`);
-  };
-
-  const formatConnectedDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 1) return 'Connected yesterday';
-    if (diffDays < 7) return `Connected ${diffDays} days ago`;
-    if (diffDays < 30) return `Connected ${Math.ceil(diffDays / 7)} weeks ago`;
-    return `Connected ${Math.ceil(diffDays / 30)} months ago`;
-  };
-
   const fetchConnectionRequests = async (userId: string) => {
     try {
-      // Fetch pending friend requests from the database
       const { data, error } = await supabase
         .from('pending_friend_requests')
         .select('*')
@@ -145,18 +121,16 @@ export default function FriendsList() {
     }
   };
 
+  const handleFriendClick = (friendId: string) => router.push(`/messages?friend=${friendId}`);
+  const handleStartChat = (friendId: string) => router.push(`/messages?conversation=${friendId}`);
+
   const handleAcceptRequest = async (requestId: string) => {
     try {
-      // Call the accept_friend_request function in the database
-      const { error } = await supabase
-        .rpc('accept_friend_request', { request_id: requestId });
-
+      const { error } = await supabase.rpc('accept_friend_request', { request_id: requestId });
       if (error) {
         console.error('Error accepting friend request:', error);
         return;
       }
-
-      // Refresh the data after successful acceptance
       if (currentUser) {
         fetchConnectionRequests(currentUser.id);
         fetchFriends(currentUser.id);
@@ -168,19 +142,12 @@ export default function FriendsList() {
 
   const handleDeclineRequest = async (requestId: string) => {
     try {
-      // Call the decline_friend_request function in the database
-      const { error } = await supabase
-        .rpc('decline_friend_request', { request_id: requestId });
-
+      const { error } = await supabase.rpc('decline_friend_request', { request_id: requestId });
       if (error) {
         console.error('Error declining friend request:', error);
         return;
       }
-
-      // Refresh the connection requests after declining
-      if (currentUser) {
-        fetchConnectionRequests(currentUser.id);
-      }
+      if (currentUser) fetchConnectionRequests(currentUser.id);
     } catch (error) {
       console.error('Error declining connection request:', error);
     }
@@ -195,144 +162,93 @@ export default function FriendsList() {
     }
   };
 
+  const formatConnectedDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) return 'Connected yesterday';
+    if (diffDays < 7) return `Connected ${diffDays} days ago`;
+    if (diffDays < 30) return `Connected ${Math.ceil(diffDays / 7)} weeks ago`;
+    return `Connected ${Math.ceil(diffDays / 30)} months ago`;
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-black">
-        <div className="container mx-auto px-4 py-8">
-          <div className="animate-pulse">
-            <div className="h-8 bg-[#E70008]/20 rounded w-64 mb-8"></div>
-            <div className="space-y-4">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="h-20 bg-[#E70008]/20 rounded-lg"></div>
-              ))}
-            </div>
-          </div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="animate-pulse w-full max-w-md px-4">
+          <div className="h-8 bg-[#E70008]/20 rounded mb-4"></div>
+          {[1,2,3].map(i => (
+            <div key={i} className="h-20 bg-[#E70008]/20 rounded-lg mb-4"></div>
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-black text-[#F9E4AD]">
       {/* Header */}
       <header className="border-b border-[#E70008]/20">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold font-mono text-[#E70008]">
-                Magna Coders
-              </h1>
-              <nav className="hidden md:flex items-center space-x-6">
-                <a href="/dashboard" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
-                  Dashboard
-                </a>
-                <a href="/friends" className="text-[#FF9940] font-mono border-b-2 border-[#FF9940] pb-1">
-                  Friends
-                </a>
-                <a href="/messages" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
-                  Messages
-                </a>
-                <a href="/members" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
-                  Members
-                </a>
-                <a href="/my-projects" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
-                  My Projects
-                </a>
-              </nav>
-            </div>
-            <button 
-              onClick={handleLogout}
-              className="px-4 py-2 bg-[#E70008] text-black font-mono font-bold rounded-md hover:bg-[#FF9940] transition-colors">
+        <div className="flex flex-col sm:flex-row items-center justify-between px-4 sm:px-6 py-4">
+          <h1 className="text-2xl font-bold font-mono text-[#E70008] mb-2 sm:mb-0">
+            Magna Coders
+          </h1>
+          <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+            <nav className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+              <a href="/dashboard" className="hover:text-[#FF9940] transition-colors">Dashboard</a>
+              <a href="/friends" className="text-[#FF9940] border-b-2 border-[#FF9940] pb-1">Friends</a>
+              <a href="/messages" className="hover:text-[#FF9940] transition-colors">Messages</a>
+              <a href="/members" className="hover:text-[#FF9940] transition-colors">Members</a>
+              <a href="/my-projects" className="hover:text-[#FF9940] transition-colors">My Projects</a>
+            </nav>
+            <button onClick={handleLogout} className="px-4 py-2 bg-[#E70008] text-black font-bold rounded hover:bg-[#FF9940] transition-colors">
               Logout
             </button>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="px-4 sm:px-6 py-8 max-w-4xl mx-auto">
         {/* Page Header */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold font-mono text-[#F9E4AD] mb-2">
-            Connected Friends
-          </h2>
-          <p className="text-[#F9E4AD]/80 font-mono">
-            Stay connected with your coding community
-          </p>
+          <h2 className="text-2xl sm:text-3xl font-bold font-mono text-[#F9E4AD] mb-2">Connected Friends</h2>
+          <p className="text-[#F9E4AD]/80 font-mono">Stay connected with your coding community</p>
         </div>
 
-        {/* Connection Requests Section */}
+        {/* Connection Requests */}
         {connectionRequests.length > 0 && (
           <div className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold font-mono text-[#FF9940]">
-                Connection Requests
-              </h3>
-              <span className="bg-[#E70008] text-black px-3 py-1 rounded-full text-sm font-mono font-bold">
-                {connectionRequests.length}
-              </span>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl sm:text-2xl font-bold font-mono text-[#FF9940]">Connection Requests</h3>
+              <span className="bg-[#E70008] text-black px-3 py-1 rounded-full text-sm font-bold">{connectionRequests.length}</span>
             </div>
-            <div className="grid gap-4">
-              {connectionRequests.map((request) => (
-                <div 
-                  key={request.id}
-                  className="bg-[#1a1a1a] border border-[#FF9940]/30 rounded-lg p-6 hover:border-[#E70008] transition-all duration-300"
-                >
-                  <div className="flex items-center justify-between">
+            <div className="grid grid-cols-1 gap-4">
+              {connectionRequests.map(req => (
+                <div key={req.id} className="bg-[#1a1a1a] border border-[#FF9940]/30 rounded-lg p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4">
                     <div className="flex items-center space-x-4">
-                      {/* Sender Avatar */}
-                      <div className="relative">
-                        <div className="w-16 h-16 bg-[#FF9940]/20 rounded-full flex items-center justify-center text-2xl font-mono text-[#F9E4AD]">
-                          {request.sender_avatar_url ? (
-                            <img 
-                              src={request.sender_avatar_url} 
-                              alt={request.sender_username}
-                              className="w-16 h-16 rounded-full object-cover"
-                            />
-                          ) : (
-                            request.sender_username.charAt(0).toUpperCase()
-                          )}
-                        </div>
+                      <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-[#FF9940]/20 flex items-center justify-center text-xl sm:text-2xl">
+                        {req.sender_avatar_url ? (
+                          <img src={req.sender_avatar_url} alt={req.sender_username} className="w-full h-full rounded-full object-cover" />
+                        ) : req.sender_username.charAt(0).toUpperCase()}
                       </div>
-
-                      {/* Request Info */}
                       <div>
-                        <h4 className="text-xl font-bold font-mono text-[#F9E4AD]">
-                          {request.sender_username}
-                        </h4>
-                        <p className="text-sm font-mono text-[#F9E4AD]/60 mb-2">
-                          {request.sender_email}
-                        </p>
-                        {request.sender_bio && (
-                          <p className="text-sm font-mono text-[#F9E4AD]/80 mb-2">
-                            {request.sender_bio}
+                        <h4 className="font-bold text-sm sm:text-lg">{req.sender_username}</h4>
+                        <p className="text-xs sm:text-sm text-[#F9E4AD]/60">{req.sender_email}</p>
+                        {req.sender_bio && <p className="text-xs sm:text-sm text-[#F9E4AD]/80">{req.sender_bio}</p>}
+                        {req.message && (
+                          <p className="text-xs sm:text-sm italic bg-black/30 p-2 rounded border-l-4 border-[#FF9940] mt-1">
+                            &ldquo;{req.message}&rdquo;
                           </p>
                         )}
-                        {request.message && (
-                          <p className="text-sm font-mono text-[#F9E4AD] italic bg-black/30 p-3 rounded-md border-l-4 border-[#FF9940]">
-                            &ldquo;{request.message}&rdquo;
-                          </p>
-                        )}
-                        <p className="text-xs font-mono text-[#FF9940] mt-2">
-                          Requested {new Date(request.created_at).toLocaleDateString()}
-                        </p>
+                        <p className="text-[10px] sm:text-xs text-[#FF9940] mt-1">Requested {new Date(req.created_at).toLocaleDateString()}</p>
                       </div>
                     </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex space-x-3">
-                      <button 
-                        onClick={() => handleAcceptRequest(request.id)}
-                        className="px-6 py-2 bg-[#FF9940] text-black font-mono font-bold rounded-md hover:bg-[#E70008] transition-colors flex items-center space-x-2"
-                      >
-                        <span>✓</span>
-                        <span>Accept</span>
-                      </button>
-                      <button 
-                        onClick={() => handleDeclineRequest(request.id)}
-                        className="px-6 py-2 border border-[#F9E4AD] text-[#F9E4AD] font-mono font-bold rounded-md hover:bg-[#F9E4AD] hover:text-black transition-colors"
-                      >
-                        Decline
-                      </button>
+                    <div className="flex flex-wrap gap-2">
+                      <button onClick={() => handleAcceptRequest(req.id)} className="px-3 py-2 bg-[#FF9940] text-black font-bold rounded hover:bg-[#E70008] transition-colors">✓ Accept</button>
+                      <button onClick={() => handleDeclineRequest(req.id)} className="px-3 py-2 border border-[#F9E4AD] text-[#F9E4AD] rounded hover:bg-[#F9E4AD] hover:text-black transition-colors">Decline</button>
                     </div>
                   </div>
                 </div>
@@ -342,84 +258,35 @@ export default function FriendsList() {
         )}
 
         {/* Friends List */}
-        <div className="grid gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {friends.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-6xl mb-4">👥</div>
-              <h3 className="text-xl font-mono text-[#F9E4AD] mb-2">
-                No friends yet
-              </h3>
-              <p className="text-[#F9E4AD]/60 font-mono mb-4">
-                Connect with other members to build your network
-              </p>
-              <a 
-                href="/members" 
-                className="inline-block px-6 py-3 bg-[#E70008] text-black font-mono font-bold rounded-md hover:bg-[#FF9940] transition-colors"
-              >
-                Find Members
-              </a>
+              <div className="text-5xl sm:text-6xl mb-4">👥</div>
+              <h3 className="text-lg sm:text-xl font-bold mb-2">No friends yet</h3>
+              <p className="text-[#F9E4AD]/60 mb-4">Connect with other members to build your network</p>
+              <a href="/members" className="inline-block px-4 sm:px-6 py-2 bg-[#E70008] text-black font-bold rounded hover:bg-[#FF9940] transition-colors">Find Members</a>
             </div>
           ) : (
-            friends.map((friend) => (
-              <div 
-                key={friend.id}
-                className="bg-[#1a1a1a] border border-[#E70008]/30 rounded-lg p-6 hover:border-[#FF9940] transition-all duration-300 hover:shadow-lg hover:shadow-[#E70008]/20"
-              >
-                <div className="flex items-center justify-between">
+            friends.map(friend => (
+              <div key={friend.id} className="bg-[#1a1a1a] border border-[#E70008]/30 rounded-lg p-4 sm:p-6 hover:border-[#FF9940] transition-all">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4">
                   <div className="flex items-center space-x-4">
-                    {/* Avatar */}
-                    <div className="relative">
-                      <div className="w-16 h-16 bg-[#E70008]/20 rounded-full flex items-center justify-center text-2xl font-mono text-[#F9E4AD]">
-                        {friend.avatar_url ? (
-                          <img 
-                            src={friend.avatar_url} 
-                            alt={friend.username}
-                            className="w-16 h-16 rounded-full object-cover"
-                          />
-                        ) : (
-                          friend.username.charAt(0).toUpperCase()
-                        )}
-                      </div>
-                      {/* Online Status Indicator */}
-                      <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-black ${
-                        friend.is_online ? 'bg-[#FF9940]' : 'bg-gray-500'
-                      }`}></div>
+                    <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-[#E70008]/20 flex items-center justify-center text-xl sm:text-2xl">
+                      {friend.avatar_url ? (
+                        <img src={friend.avatar_url} alt={friend.username} className="w-full h-full rounded-full object-cover" />
+                      ) : friend.username.charAt(0).toUpperCase()}
+                      <div className={`absolute -bottom-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 border-black ${friend.is_online ? 'bg-[#FF9940]' : 'bg-gray-500'}`}></div>
                     </div>
-
-                    {/* Friend Info */}
                     <div>
-                      <h3 className="text-xl font-bold font-mono text-[#F9E4AD]">
-                        {friend.username}
-                      </h3>
-                      <p className="text-sm font-mono text-[#F9E4AD]/60 mb-1">
-                        {friend.email}
-                      </p>
-                      {friend.bio && (
-                        <p className="text-sm font-mono text-[#F9E4AD]/80">
-                          {friend.bio}
-                        </p>
-                      )}
-                      <p className="text-xs font-mono text-[#FF9940] mt-2">
-                        {formatConnectedDate(friend.connected_at)}
-                      </p>
+                      <h3 className="text-sm sm:text-lg font-bold">{friend.username}</h3>
+                      <p className="text-xs sm:text-sm text-[#F9E4AD]/60">{friend.email}</p>
+                      {friend.bio && <p className="text-xs sm:text-sm text-[#F9E4AD]/80">{friend.bio}</p>}
+                      <p className="text-[10px] sm:text-xs text-[#FF9940] mt-1">{formatConnectedDate(friend.connected_at)}</p>
                     </div>
                   </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex space-x-3">
-                    <button 
-                      onClick={() => handleStartChat(friend.id)}
-                      className="px-4 py-2 bg-[#E70008] text-black font-mono font-bold rounded-md hover:bg-[#FF9940] transition-colors flex items-center space-x-2"
-                    >
-                      <span>💬</span>
-                      <span>Chat</span>
-                    </button>
-                    <button 
-                      onClick={() => handleFriendClick(friend.id)}
-                      className="px-4 py-2 border border-[#F9E4AD] text-[#F9E4AD] font-mono font-bold rounded-md hover:bg-[#F9E4AD] hover:text-black transition-colors"
-                    >
-                      View Profile
-                    </button>
+                  <div className="flex flex-wrap gap-2">
+                    <button onClick={() => handleStartChat(friend.id)} className="px-3 py-2 bg-[#E70008] text-black font-bold rounded hover:bg-[#FF9940] transition-colors">💬 Chat</button>
+                    <button onClick={() => handleFriendClick(friend.id)} className="px-3 py-2 border border-[#F9E4AD] text-[#F9E4AD] rounded hover:bg-[#F9E4AD] hover:text-black transition-colors">View Profile</button>
                   </div>
                 </div>
               </div>
@@ -429,35 +296,18 @@ export default function FriendsList() {
 
         {/* Stats Section */}
         {friends.length > 0 && (
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-[#E70008]/10 border border-[#E70008]/30 rounded-lg p-6 text-center">
-              <div className="text-3xl font-bold font-mono text-[#FF9940] mb-2">
-                {friends.length}
-              </div>
-              <div className="text-sm font-mono text-[#F9E4AD]">
-                Total Connections
-              </div>
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="bg-[#E70008]/10 border border-[#E70008]/30 rounded-lg p-4 text-center">
+              <div className="text-2xl sm:text-3xl font-bold text-[#FF9940] mb-1">{friends.length}</div>
+              <div className="text-sm">Total Connections</div>
             </div>
-            <div className="bg-[#FF9940]/10 border border-[#FF9940]/30 rounded-lg p-6 text-center">
-              <div className="text-3xl font-bold font-mono text-[#E70008] mb-2">
-                {friends.filter(f => f.is_online).length}
-              </div>
-              <div className="text-sm font-mono text-[#F9E4AD]">
-                Online Now
-              </div>
+            <div className="bg-[#FF9940]/10 border border-[#FF9940]/30 rounded-lg p-4 text-center">
+              <div className="text-2xl sm:text-3xl font-bold text-[#E70008] mb-1">{friends.filter(f => f.is_online).length}</div>
+              <div className="text-sm">Online Now</div>
             </div>
-            <div className="bg-[#F9E4AD]/10 border border-[#F9E4AD]/30 rounded-lg p-6 text-center">
-              <div className="text-3xl font-bold font-mono text-[#E70008] mb-2">
-                {friends.filter(f => {
-                  const connectedDate = new Date(f.connected_at);
-                  const thirtyDaysAgo = new Date();
-                  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                  return connectedDate > thirtyDaysAgo;
-                }).length}
-              </div>
-              <div className="text-sm font-mono text-[#F9E4AD]">
-                New This Month
-              </div>
+            <div className="bg-[#F9E4AD]/10 border border-[#F9E4AD]/30 rounded-lg p-4 text-center">
+              <div className="text-2xl sm:text-3xl font-bold text-[#E70008] mb-1">{friends.filter(f => new Date(f.connected_at) > new Date(Date.now() - 30*24*60*60*1000)).length}</div>
+              <div className="text-sm">New This Month</div>
             </div>
           </div>
         )}
