@@ -326,7 +326,7 @@ export default function CreateAccount() {
               {/* Categories */}
               <div>
                 <label className="block text-[#F9E4AD] font-mono text-sm font-medium mb-2">
-                  Categories (Select all that apply)
+                  Categories (Select your respective category)
                 </label>
                 <div className="relative p-4 border border-[#E70008] rounded-md">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

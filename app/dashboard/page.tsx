@@ -262,6 +262,13 @@ export default function HomeDashboard() {
       color: "bg-[#FF9940]"
     },
     {
+      title: "Chats",
+      description: "View your conversations",
+      icon: "💬",
+      action: () => window.location.href = "/messages",
+      color: "bg-[#E70008]"
+    },
+    {
       title: "Create Project",
       description: "Start a new collaboration",
       icon: "➕",
