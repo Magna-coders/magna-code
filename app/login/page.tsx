@@ -58,8 +58,8 @@ export default function Login() {
       }
 
       if (data.user) {
-        // Successful login - redirect to dashboard
-        router.push('/dashboard');
+        // Successful login - redirect to profile update page
+        router.push('/profile/update');
       }
     } catch (error: unknown) {
       console.error('Login error:', error);

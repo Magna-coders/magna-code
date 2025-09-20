@@ -268,24 +268,28 @@ export default function UpdateProfile() {
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
       <header className="bg-black border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-white">Update Profile</h1>
-            <Link href="/dashboard" className="text-gray-400 hover:text-white transition-colors">
-              ← Back to Dashboard
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Update Profile</h1>
+            <Link href="/dashboard" className="text-sm sm:text-base text-gray-400 hover:text-white transition-colors flex items-center">
+              <svg className="w-4 h-4 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="hidden sm:inline">Back to Dashboard</span>
+              <span className="sm:hidden">Back</span>
             </Link>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
         {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="text-[#FF9940] font-mono">Loading profile...</div>
+          <div className="flex justify-center items-center h-48 sm:h-64">
+            <div className="text-[#FF9940] font-mono text-sm sm:text-base">Loading profile...</div>
           </div>
         ) : (
-          <div className="bg-gradient-to-r from-[#E70008]/10 to-[#FF9940]/10 rounded-lg p-8 border border-[#E70008]/30">
-            <h2 className="text-2xl font-bold font-mono text-[#FF9940] mb-6">Update Your Profile</h2>
+          <div className="bg-gradient-to-r from-[#E70008]/10 to-[#FF9940]/10 rounded-lg p-4 sm:p-6 lg:p-8 border border-[#E70008]/30">
+            <h2 className="text-xl sm:text-2xl font-bold font-mono text-[#FF9940] mb-4 sm:mb-6">Update Your Profile</h2>
             
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Profile Picture Upload */}
@@ -296,11 +300,11 @@ export default function UpdateProfile() {
                     <img 
                       src={profile.profilePic} 
                       alt="Profile" 
-                      className="w-32 h-32 rounded-full object-cover border-2 border-[#E70008]"
+                      className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-2 border-[#E70008]"
                     />
                   ) : (
-                    <div className="w-32 h-32 rounded-full bg-[#E70008]/20 border-2 border-[#E70008] flex items-center justify-center">
-                      <span className="text-[#FF9940] text-4xl">👤</span>
+                    <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-[#E70008]/20 border-2 border-[#E70008] flex items-center justify-center">
+                      <span className="text-[#FF9940] text-2xl sm:text-4xl">👤</span>
                     </div>
                   )}
                   <input
@@ -318,8 +322,8 @@ export default function UpdateProfile() {
                 <textarea
                   value={profile.bio}
                   onChange={(e) => handleInputChange('bio', e.target.value)}
-                  rows={4}
-                  className="w-full px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
+                  rows={3}
+                  className="w-full px-3 sm:px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940] text-sm sm:text-base"
                   placeholder="Tell us about yourself"
                 />
               </div>
@@ -333,28 +337,28 @@ export default function UpdateProfile() {
                     value={newSkill}
                     onChange={(e) => setNewSkill(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
-                    className="flex-1 px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
+                    className="flex-1 px-3 sm:px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940] text-sm sm:text-base"
                     placeholder="Enter any skill you have"
                   />
                   <button
                     type="button"
                     onClick={handleAddSkill}
-                    className="px-4 py-2 bg-[#E70008] text-black font-mono font-bold rounded-md hover:bg-[#FF9940] transition-colors"
+                    className="px-3 sm:px-4 py-2 bg-[#E70008] text-black font-mono font-bold rounded-md hover:bg-[#FF9940] transition-colors text-sm sm:text-base"
                   >
                     Add
                   </button>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1 sm:gap-2">
                   {profile.skills.map((skill) => (
                     <span
                       key={skill.name}
-                      className="px-3 py-1 bg-[#E70008]/30 text-[#FF9940] text-sm font-mono rounded-full border border-[#E70008] flex items-center gap-2"
+                      className="px-2 sm:px-3 py-1 bg-[#E70008]/30 text-[#FF9940] text-xs sm:text-sm font-mono rounded-full border border-[#E70008] flex items-center gap-1 sm:gap-2"
                     >
                       {skill.name}
                       <button
                         type="button"
                         onClick={() => handleRemoveSkill(skill.name)}
-                        className="text-[#FF9940]/60 hover:text-[#FF9940]"
+                        className="text-[#FF9940]/60 hover:text-[#FF9940] text-sm"
                       >
                         ×
                       </button>
@@ -369,7 +373,7 @@ export default function UpdateProfile() {
                   type="text"
                   value={profile.location}
                   onChange={(e) => handleInputChange('location', e.target.value)}
-                  className="w-full px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940]"
+                  className="w-full px-3 sm:px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940] text-sm sm:text-base"
                   placeholder="City, Country"
                 />
               </div>
