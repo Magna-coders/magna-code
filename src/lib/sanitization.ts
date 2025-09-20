@@ -43,11 +43,13 @@ export function sanitizeInput(input: string, maxLength: number = 255): string {
     /(\b(or|and)\b.*=.*)/gi
   ];
   
+  // Apply SQL pattern replacements
+  let finalSanitized = sanitized;
   sqlPatterns.forEach(pattern => {
-    sanitized = sanitized.replace(pattern, '');
+    finalSanitized = finalSanitized.replace(pattern, '');
   });
   
-  return sanitized;
+  return finalSanitized;
 }
 
 /**
