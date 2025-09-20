@@ -48,61 +48,51 @@ export default function MembersPage() {
 
     setCurrentUser(user);
     fetchMembers(user.id);
-    fetchConnections(user.id);
   };
 
   const fetchMembers = async (userId: string) => {
-    const { data, error } = await supabase
+    // Fetch all members except current user
+    const { data: allMembers, error: membersError } = await supabase
       .from("users")
       .select(
-        `
-        id,
-        username,
-        email,
-        avatar_url,
-        bio,
-        location,
-        availability,
-        user_categories ( category_name ),
-        user_skills ( skill_name ),
-        user_roles ( role_name )
-      `
+        `id, username, email, avatar_url, bio, location, availability,
+         user_categories(category_name),
+         user_skills(skill_name),
+         user_roles(role_name)`
       )
       .neq("id", userId)
       .order("username", { ascending: true });
 
-    if (error) {
-      console.error("Error fetching members:", error);
+    if (membersError) {
+      console.error("Error fetching members:", membersError);
+      setLoading(false);
       return;
     }
 
-    setMembers(data || []);
-  };
-
-  const fetchConnections = async (userId: string) => {
+    // Fetch friends
     const { data: friends } = await supabase
       .from("friends")
       .select("friend_id")
       .eq("user_id", userId);
 
+    // Fetch pending friend requests
     const { data: pending } = await supabase
       .from("friend_requests")
       .select("sender_id, receiver_id, status")
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .eq("status", "pending");
 
+    // Map connection status
     const statusMap: Record<string, ConnectionStatus> = {};
 
-    friends?.forEach((f) => {
-      statusMap[f.friend_id] = "friend";
-    });
-
+    friends?.forEach((f) => (statusMap[f.friend_id] = "friend"));
     pending?.forEach((r) => {
       const otherId = r.sender_id === userId ? r.receiver_id : r.sender_id;
       statusMap[otherId] = "pending";
     });
 
     setConnections(statusMap);
+    setMembers(allMembers || []);
     setLoading(false);
   };
 
@@ -131,16 +121,35 @@ export default function MembersPage() {
     alert("Friend request sent!");
   };
 
+  const handleChat = async (friendId: string) => {
+    if (!currentUser) return;
+
+    const { data, error } = await supabase
+      .rpc("get_or_create_direct_conversation", {
+        sender_id: currentUser.id,
+        receiver_id: friendId,
+      })
+      .single();
+
+    if (error) {
+      console.error("Error opening conversation:", error);
+      alert("Failed to open chat.");
+      return;
+    }
+
+    router.push(`/messages?conversation=${data.id}`);
+  };
+
   const renderButton = (memberId: string) => {
     const status = connections[memberId] || "none";
 
     if (status === "friend") {
       return (
         <button
-          disabled
-          className="flex-1 px-4 py-2 bg-gray-600 text-white font-mono font-bold rounded-md cursor-not-allowed"
+          onClick={() => handleChat(memberId)}
+          className="flex-1 px-4 py-2 bg-[#E70008] text-black font-mono font-bold rounded-md hover:bg-[#FF9940] transition-colors"
         >
-          ✅ Connected
+          Chat
         </button>
       );
     }
@@ -177,45 +186,27 @@ export default function MembersPage() {
   return (
     <div className="min-h-screen bg-black">
       <header className="border-b border-[#E70008]/20">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold font-mono text-[#E70008]">
-              Magna Coders
-            </h1>
-            <nav className="hidden md:flex items-center space-x-6">
-              <a
-                href="/dashboard"
-                className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors"
-              >
-                Dashboard
-              </a>
-              <a
-                href="/friends"
-                className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors"
-              >
-                Friends
-              </a>
-              <a
-                href="/messages"
-                className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors"
-              >
-                Messages
-              </a>
-              <a
-                href="/members"
-                className="text-[#FF9940] font-mono border-b-2 border-[#FF9940] pb-1"
-              >
-                Members
-              </a>
-            </nav>
-          </div>
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <h1 className="text-2xl font-bold font-mono text-[#E70008]">Magna Coders</h1>
+          <nav className="hidden md:flex items-center space-x-6">
+            <a href="/dashboard" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
+              Dashboard
+            </a>
+            <a href="/friends" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
+              Friends
+            </a>
+            <a href="/messages" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
+              Messages
+            </a>
+            <a href="/members" className="text-[#FF9940] font-mono border-b-2 border-[#FF9940] pb-1">
+              Members
+            </a>
+          </nav>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <h2 className="text-3xl font-bold font-mono text-[#F9E4AD] mb-6">
-          Community Members
-        </h2>
+        <h2 className="text-3xl font-bold font-mono text-[#F9E4AD] mb-6">Community Members</h2>
 
         {members.length === 0 ? (
           <p className="text-[#F9E4AD]/60 font-mono">No members found.</p>
@@ -226,7 +217,6 @@ export default function MembersPage() {
                 key={member.id}
                 className="bg-[#1a1a1a] border border-[#FF9940]/30 rounded-2xl p-6 flex flex-col justify-between hover:shadow-lg hover:border-[#E70008] transition-all duration-300"
               >
-                {/* Top section */}
                 <div>
                   <div className="flex items-center space-x-4">
                     <div className="w-16 h-16 bg-[#FF9940]/20 rounded-full flex items-center justify-center text-2xl font-mono text-[#F9E4AD]">
@@ -241,16 +231,10 @@ export default function MembersPage() {
                       )}
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold font-mono text-[#F9E4AD]">
-                        {member.username}
-                      </h3>
-                      <p className="text-sm font-mono text-[#F9E4AD]/60">
-                        {member.email}
-                      </p>
+                      <h3 className="text-xl font-bold font-mono text-[#F9E4AD]">{member.username}</h3>
+                      <p className="text-sm font-mono text-[#F9E4AD]/60">{member.email}</p>
                       {member.bio && (
-                        <p className="text-sm font-mono text-[#F9E4AD]/80 mt-1 line-clamp-2">
-                          {member.bio}
-                        </p>
+                        <p className="text-sm font-mono text-[#F9E4AD]/80 mt-1 line-clamp-2">{member.bio}</p>
                       )}
                     </div>
                   </div>
@@ -294,23 +278,13 @@ export default function MembersPage() {
                   <div className="mt-2 text-xs font-mono text-[#F9E4AD]/60">
                     {member.location && <span>{member.location}</span>}
                     {member.availability && (
-                      <span className="ml-2 bg-[#F9E4AD]/20 text-[#F9E4AD] px-2 py-1 rounded-lg">
-                        {member.availability}
-                      </span>
+                      <span className="ml-2 bg-[#F9E4AD]/20 text-[#F9E4AD] px-2 py-1 rounded-lg">{member.availability}</span>
                     )}
                   </div>
                 </div>
 
                 {/* Bottom buttons */}
-                <div className="mt-6 flex space-x-3">
-                  <button
-                    onClick={() => router.push(`/messages?friend=${member.id}`)}
-                    className="flex-1 px-4 py-2 bg-[#E70008] text-black font-mono font-bold rounded-md hover:bg-[#FF9940] transition-colors"
-                  >
-                    Chat
-                  </button>
-                  {renderButton(member.id)}
-                </div>
+                <div className="mt-6 flex space-x-3">{renderButton(member.id)}</div>
               </div>
             ))}
           </div>
