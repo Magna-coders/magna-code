@@ -35,6 +35,7 @@ export default function FriendsList() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [connectionRequests, setConnectionRequests] = useState<ConnectionRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const router = useRouter();
 
@@ -191,23 +192,65 @@ export default function FriendsList() {
     <div className="min-h-screen bg-black text-[#F9E4AD]">
       {/* Header */}
       <header className="border-b border-[#E70008]/20">
-        <div className="flex flex-col sm:flex-row items-center justify-between px-4 sm:px-6 py-4">
-          <h1 className="text-2xl font-bold font-mono text-[#E70008] mb-2 sm:mb-0">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4">
+          <h1 className="text-2xl font-bold font-mono text-[#E70008]">
             Magna Coders
           </h1>
-          <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-            <nav className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-              <a href="/dashboard" className="hover:text-[#FF9940] transition-colors">Dashboard</a>
+          
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden text-[#F9E4AD] hover:text-[#FF9940] transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {mobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
+
+          {/* Desktop navigation */}
+          <div className="hidden md:flex md:flex-row items-center space-x-4">
+            <nav className="flex flex-row items-center space-x-4">
+              <a href="/dashboard" className="text-[#F9E4AD] hover:text-[#FF9940] transition-colors">Dashboard</a>
               <a href="/friends" className="text-[#FF9940] border-b-2 border-[#FF9940] pb-1">Friends</a>
-              <a href="/messages" className="hover:text-[#FF9940] transition-colors">Messages</a>
-              <a href="/members" className="hover:text-[#FF9940] transition-colors">Members</a>
-              <a href="/my-projects" className="hover:text-[#FF9940] transition-colors">My Projects</a>
+              <a href="/messages" className="text-[#F9E4AD] hover:text-[#FF9940] transition-colors">Messages</a>
+              <a href="/members" className="text-[#F9E4AD] hover:text-[#FF9940] transition-colors">Members</a>
+              <a href="/my-projects" className="text-[#F9E4AD] hover:text-[#FF9940] transition-colors">My Projects</a>
             </nav>
             <button onClick={handleLogout} className="px-4 py-2 bg-[#E70008] text-black font-bold rounded hover:bg-[#FF9940] transition-colors">
               Logout
             </button>
           </div>
         </div>
+
+        {/* Mobile navigation */}
+        {mobileMenuOpen && (
+          <nav className="md:hidden border-t border-[#E70008]/20 bg-black">
+            <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
+              <a href="/dashboard" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
+                Dashboard
+              </a>
+              <a href="/friends" className="text-[#FF9940] font-mono border-l-2 border-[#FF9940] pl-3">
+                Friends
+              </a>
+              <a href="/messages" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
+                Messages
+              </a>
+              <a href="/members" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
+                Members
+              </a>
+              <a href="/my-projects" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
+                My Projects
+              </a>
+              <button onClick={handleLogout} className="px-4 py-2 bg-[#E70008] text-black font-bold rounded hover:bg-[#FF9940] transition-colors w-fit">
+                Logout
+              </button>
+            </div>
+          </nav>
+        )}
       </header>
 
       <main className="px-4 sm:px-6 py-8 max-w-4xl mx-auto">
