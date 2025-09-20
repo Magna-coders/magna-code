@@ -145,7 +145,7 @@ export default function MessagesPage() {
       return;
     }
 
-    setMessages((prev) => [...prev, data]);
+    setMessages((prev) => [...prev, data as Message]);
     setNewMessage("");
     setSending(false);
   };
@@ -175,7 +175,15 @@ export default function MessagesPage() {
       {/* Sidebar */}
       <div className="w-80 bg-[#111] border-r border-[#333]">
         <div className="p-4 border-b border-[#333]">
-          <h2 className="text-lg font-semibold text-[#F9E4AD]">Conversations</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-[#F9E4AD]">Conversations</h2>
+            <button
+              onClick={() => window.location.href = '/dashboard'}
+              className="bg-[#FF9940] text-black px-3 py-1 rounded-lg hover:bg-[#E70008] transition-colors text-sm"
+            >
+              Dashboard
+            </button>
+          </div>
         </div>
         <div className="overflow-y-auto h-[calc(100%-65px)]">
           {conversations.length === 0 && (
