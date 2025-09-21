@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient, User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Member {
   id: string;
@@ -226,7 +227,28 @@ export default function MembersPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <p className="text-[#F9E4AD] font-mono">Loading members...</p>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
+          className="text-center"
+        >
+          <motion.img
+            src="/icons/icon-192x192.png"
+            alt="Magna Logo"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="w-16 h-16 mb-4 mx-auto"
+          />
+          <motion.p 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-[#F9E4AD] font-mono text-lg font-bold"
+          >
+            magna
+          </motion.p>
+        </motion.div>
       </div>
     );
   }
@@ -301,11 +323,60 @@ export default function MembersPage() {
       </header>
 
       <main className="container mx-auto px-3 py-4 sm:px-4 sm:py-8">
-        <h2 className="text-2xl sm:text-3xl font-bold font-mono text-[#F9E4AD] mb-4 sm:mb-6">Community Members</h2>
+        {/* Page Header */}
+        <motion.div 
+          className="mb-8"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <motion.button
+                onClick={() => router.back()}
+                className="text-[#F9E4AD] hover:text-[#FF9940] transition-colors"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </motion.button>
+              <motion.h1 
+                className="text-4xl font-bold text-[#F9E4AD] font-mono"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2, duration: 0.6 }}
+              >
+                Members
+              </motion.h1>
+            </div>
+            <motion.div 
+              className="flex items-center gap-2"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+            >
+              <span className="text-[#F9E4AD] font-mono text-sm">Total:</span>
+              <motion.span 
+                className="text-[#FF9940] font-mono font-bold"
+                key={filteredMembers.length}
+                initial={{ scale: 1.2 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                {filteredMembers.length}
+              </motion.span>
+            </motion.div>
+          </div>
 
-        {/* Search Section */}
-        <div className="mb-6 sm:mb-8">
-          <div className="relative max-w-md mx-auto">
+          {/* Search Bar */}
+          <motion.div 
+            className="relative max-w-md mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+          >
             <input
               type="text"
               placeholder="Search by name, category, role, location..."
@@ -319,42 +390,110 @@ export default function MembersPage() {
               </svg>
             </div>
             {searchQuery && (
-              <button
+              <motion.button
                 onClick={() => setSearchQuery("")}
                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#F9E4AD]/60 hover:text-[#F9E4AD] transition-colors"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-              </button>
+              </motion.button>
             )}
-          </div>
-         </div>
+          </motion.div>
+        </motion.div>
 
         {filteredMembers.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-[#F9E4AD]/60 font-mono text-sm sm:text-base mb-2">
+          <motion.div 
+            className="text-center py-12"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <motion.div 
+              className="w-24 h-24 mx-auto mb-4 bg-[#1a1a1a] border-2 border-dashed border-[#333] rounded-full flex items-center justify-center"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            >
+              <motion.svg 
+                className="w-12 h-12 text-[#F9E4AD]/40" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </motion.svg>
+            </motion.div>
+            <motion.h3 
+              className="text-xl font-mono text-[#F9E4AD] mb-2"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
               {searchQuery ? `No members found for "${searchQuery}"` : "No members found."}
-            </p>
+            </motion.h3>
             {searchQuery && (
-              <button
+              <motion.button
                 onClick={() => setSearchQuery("")}
                 className="text-[#FF9940] hover:text-[#E70008] font-mono text-sm underline transition-colors"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
               >
                 Clear search
-              </button>
+              </motion.button>
             )}
-          </div>
+          </motion.div>
         ) : (
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-             {filteredMembers.map((member) => (
-              <div
+          <motion.div 
+            className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.1
+                }
+              }
+            }}
+          >
+             {filteredMembers.map((member, index) => (
+              <motion.div
                 key={member.id}
                 className="bg-[#1a1a1a] border border-[#FF9940]/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg hover:border-[#E70008] transition-all duration-300"
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: { opacity: 1, y: 0 }
+                }}
+                whileHover={{ 
+                  scale: 1.02, 
+                  y: -5,
+                  transition: { duration: 0.2 }
+                }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
               >
                 <div>
-                  <div className="flex items-center space-x-3 sm:space-x-4">
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#FF9940]/20 rounded-full flex items-center justify-center text-lg sm:text-2xl font-mono text-[#F9E4AD] flex-shrink-0">
+                  <motion.div 
+                    className="flex items-center space-x-3 sm:space-x-4"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <motion.div 
+                      className="w-12 h-12 sm:w-16 sm:h-16 bg-[#FF9940]/20 rounded-full flex items-center justify-center text-lg sm:text-2xl font-mono text-[#F9E4AD] flex-shrink-0"
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
                       {member.avatar_url ? (
                         <img
                           src={member.avatar_url}
@@ -364,15 +503,32 @@ export default function MembersPage() {
                       ) : (
                         member.username.charAt(0).toUpperCase()
                       )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-lg sm:text-xl font-bold font-mono text-[#F9E4AD] truncate">{member.username}</h3>
+                    </motion.div>
+                    <motion.div 
+                      className="min-w-0 flex-1"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.3 }}
+                    >
+                      <motion.h3 
+                        className="text-lg sm:text-xl font-bold font-mono text-[#F9E4AD] truncate"
+                        whileHover={{ color: "#FF9940" }}
+                      >
+                        {member.username}
+                      </motion.h3>
                       <p className="text-xs sm:text-sm font-mono text-[#F9E4AD]/60 truncate">{member.email}</p>
                       {member.bio && (
-                        <p className="text-xs sm:text-sm font-mono text-[#F9E4AD]/80 mt-1 line-clamp-2">{member.bio}</p>
+                        <motion.p 
+                          className="text-xs sm:text-sm font-mono text-[#F9E4AD]/80 mt-1 line-clamp-2"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.4 }}
+                        >
+                          {member.bio}
+                        </motion.p>
                       )}
-                    </div>
-                  </div>
+                    </motion.div>
+                  </motion.div>
 
                   {/* Roles */}
                   {member.user_roles && member.user_roles.length > 0 && (
@@ -418,11 +574,42 @@ export default function MembersPage() {
                   </div>
                 </div>
 
-                {/* Bottom buttons */}
-                <div className="mt-6 flex space-x-3">{renderButton(member.id)}</div>
-              </div>
+                {/* Action Buttons */}
+                <motion.div 
+                  className="flex gap-2 mt-4"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 }}
+                >
+                  <motion.button
+                    onClick={() => handleSendRequest(member.id)}
+                    disabled={connections[member.id] === "pending"}
+                    className={`flex-1 py-2 px-3 rounded-lg font-mono text-xs sm:text-sm transition-all duration-200 ${
+                      connections[member.id] === "friend"
+                        ? "bg-[#FF9940]/20 text-[#FF9940] cursor-not-allowed"
+                        : connections[member.id] === "pending"
+                        ? "bg-yellow-500/20 text-yellow-400 cursor-not-allowed"
+                        : "bg-[#FF9940] text-black hover:bg-[#FF9940]/80"
+                    }`}
+                    whileHover={{ scale: connections[member.id] ? 1 : 1.05 }}
+                    whileTap={{ scale: connections[member.id] ? 1 : 0.95 }}
+                    transition={{ type: "spring", stiffness: 400 }}
+                  >
+                    {connections[member.id] === "friend" ? "Connected" : connections[member.id] === "pending" ? "Pending" : "Connect"}
+                  </motion.button>
+                  <motion.button
+                    onClick={() => handleChat(member.id)}
+                    className="flex-1 py-2 px-3 bg-[#1a1a1a] text-[#F9E4AD] rounded-lg font-mono text-xs sm:text-sm border border-[#333] hover:border-[#FF9940] hover:text-[#FF9940] transition-all duration-200"
+                    whileHover={{ scale: 1.05, borderColor: "#FF9940" }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 400 }}
+                  >
+                    Message
+                  </motion.button>
+                </motion.div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </main>
     </div>
