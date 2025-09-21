@@ -26,15 +26,16 @@ export function sanitizeInput(input: string, maxLength: number = 255): string {
   if (typeof input !== 'string') return '';
   
   // Trim whitespace
-  let sanitized = input.trim();
+  const sanitized = input.trim();
   
   // Limit length
-  if (sanitized.length > maxLength) {
-    sanitized = sanitized.substring(0, maxLength);
+  let result = sanitized;
+  if (result.length > maxLength) {
+    result = result.substring(0, maxLength);
   }
   
   // Remove null bytes and other control characters
-  sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, '');
+  result = result.replace(/[\x00-\x1F\x7F]/g, '');
   
   // Remove SQL keywords and patterns that could be used for injection
   const sqlPatterns = [
@@ -44,12 +45,11 @@ export function sanitizeInput(input: string, maxLength: number = 255): string {
   ];
   
   // Apply SQL pattern replacements
-  let finalSanitized = sanitized;
   sqlPatterns.forEach(pattern => {
-    finalSanitized = finalSanitized.replace(pattern, '');
+    result = result.replace(pattern, '');
   });
   
-  return finalSanitized;
+  return result;
 }
 
 /**
