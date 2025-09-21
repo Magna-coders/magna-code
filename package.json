@@ -21,11 +21,13 @@
     "gsap": "^3.13.0",
     "install": "^0.13.0",
     "locomotive-scroll": "^5.0.0-beta.21",
+    "lucide-react": "^0.544.0",
     "next": "15.5.2",
     "npm": "^11.6.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "react-hot-toast": "^2.6.0"
+    "react-hot-toast": "^2.6.0",
+    "sonner": "^2.0.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient, User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { Github, Globe, Twitter, Linkedin } from "lucide-react";
 
 interface Member {
   id: string;
@@ -13,6 +14,10 @@ interface Member {
   bio?: string;
   location?: string;
   availability?: string;
+  website_url?: string;
+  github_url?: string;
+  twitter_url?: string;
+  linkedin_url?: string;
   user_categories?: { category_name: string }[];
   user_skills?: { skill_name: string }[];
   user_roles?: { role_name: string }[];
@@ -98,7 +103,7 @@ export default function MembersPage() {
     const { data: allMembers, error: membersError } = await supabase
       .from("users")
       .select(
-        `id, username, email, avatar_url, bio, location, availability,
+        `id, username, email, avatar_url, bio, location, availability, website_url, github_url, twitter_url, linkedin_url,
          user_categories(category_name),
          user_skills(skill_name),
          user_roles(role_name)`
@@ -572,6 +577,32 @@ export default function MembersPage() {
                       <span className="ml-2 bg-[#F9E4AD]/20 text-[#F9E4AD] px-2 py-1 rounded-lg">{member.availability}</span>
                     )}
                   </div>
+
+                  {/* Social Links */}
+                  {(member.website_url || member.github_url || member.twitter_url || member.linkedin_url) && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {member.website_url && (
+                        <a href={member.website_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#FF9940] hover:underline font-mono text-xs">
+                          <Globe size={16} /> Website
+                        </a>
+                      )}
+                      {member.github_url && (
+                        <a href={member.github_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#F9E4AD] hover:underline font-mono text-xs">
+                          <Github size={16} /> GitHub
+                        </a>
+                      )}
+                      {member.twitter_url && (
+                        <a href={member.twitter_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#1DA1F2] hover:underline font-mono text-xs">
+                          <Twitter size={16} /> Twitter
+                        </a>
+                      )}
+                      {member.linkedin_url && (
+                        <a href={member.linkedin_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#0A66C2] hover:underline font-mono text-xs">
+                          <Linkedin size={16} /> LinkedIn
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Action Buttons */}
