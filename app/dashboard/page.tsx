@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import ChatButton from '@/components/chat/ChatButton';
@@ -248,6 +249,13 @@ export default function HomeDashboard() {
 
   const quickActions = [
     {
+      title: "Friends",
+      description: "View and manage your friends",
+      icon: "🤗",
+      action: () => window.location.href = "/friends",
+      color: "bg-[#F9E4AD] text-black"
+    },
+    {
       title: "Find Members",
       description: "Browse other coders/designers",
       icon: "👥",
@@ -383,8 +391,16 @@ export default function HomeDashboard() {
 
       <main className="container mx-auto px-4 py-8">
         {/* Welcome Section */}
-        <section className="mb-8">
-          <div className="bg-gradient-to-r from-[#E70008]/10 to-[#FF9940]/10 rounded-lg p-6 mb-4">
+        <motion.section className="mb-8"
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <motion.div className="bg-gradient-to-r from-[#E70008]/10 to-[#FF9940]/10 rounded-lg p-6 mb-4"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.7 }}
+          >
             {loading ? (
               <div className="animate-pulse">
                 <div className="h-8 bg-[#E70008]/20 rounded w-64 mb-2"></div>
@@ -424,20 +440,41 @@ export default function HomeDashboard() {
                 </div>
               </div>
             )}
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
 
         {/* Quick Actions */}
-        <section className="mb-8">
+        <motion.section className="mb-8"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
           <h3 className="text-2xl font-bold font-mono text-[#F9E4AD] mb-4">
             Quick Actions
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: {},
+              visible: {
+                transition: {
+                  staggerChildren: 0.08
+                }
+              }
+            }}
+          >
             {quickActions.map((action, index) => (
-              <button
+              <motion.button
                 key={index}
                 onClick={action.action}
                 className="block w-full text-left p-6 rounded-lg border border-[#E70008]/30 hover:border-[#FF9940] transition-all duration-300 hover:shadow-lg hover:shadow-[#E70008]/20"
+                whileHover={{ scale: 1.04, boxShadow: "0 4px 24px #E7000855" }}
+                whileTap={{ scale: 0.98 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 * index }}
               >
                 <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center text-2xl mb-3`}>
                   {action.icon}
@@ -448,10 +485,10 @@ export default function HomeDashboard() {
                 <p className="text-sm font-mono text-[#F9E4AD]/80">
                   {action.description}
                 </p>
-              </button>
+              </motion.button>
             ))}
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Community Feed */}
