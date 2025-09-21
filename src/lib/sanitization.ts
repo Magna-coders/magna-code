@@ -75,7 +75,7 @@ export function sanitizeEmail(email: string): string {
 export function sanitizeUsername(username: string): string {
   if (typeof username !== 'string') return '';
   
-  let sanitized = username.trim();
+  const sanitized = username.trim();
   
   // Username should only contain alphanumeric characters, underscores, and hyphens
   const usernameRegex = /^[a-zA-Z0-9_-]+$/;
