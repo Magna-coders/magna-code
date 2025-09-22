@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient, User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Github, Globe, Twitter, Linkedin, MessageCircle, MapPin } from "lucide-react";
+import { Github, Globe, Twitter, Linkedin, MessageCircle, MapPin, CheckCircle } from "lucide-react";
 
 interface Member {
   id: string;
@@ -526,10 +526,13 @@ export default function MembersPage() {
                       transition={{ delay: 0.3 }}
                     >
                       <motion.h3 
-                        className="text-lg sm:text-xl font-bold font-mono text-[#F9E4AD] truncate"
+                        className="text-lg sm:text-xl font-bold font-mono text-[#F9E4AD] truncate flex items-center gap-2"
                         whileHover={{ color: "#FF9940" }}
                       >
                         {member.username}
+                        {member.username.toLowerCase() === 'ashwa' && (
+                          <CheckCircle size={16} className="text-[#1DA1F2] flex-shrink-0" />
+                        )}
                       </motion.h3>
                       <p className="text-xs sm:text-sm font-mono text-[#F9E4AD]/60 truncate">{member.email}</p>
                       {member.bio && (
