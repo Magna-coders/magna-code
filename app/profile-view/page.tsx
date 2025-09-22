@@ -112,7 +112,7 @@ function ProfileViewContent() {
                   </div>
 
                   {/* Quick Info - Roles and Categories */}
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1 sm:gap-2">
                     {member.user_roles && member.user_roles.slice(0, 2).map((role, i) => (
                       <span key={i} className="bg-[#FF9940]/20 text-[#FF9940] text-xs font-mono px-2 py-1 rounded-lg">
                         {role.role_name}
@@ -164,17 +164,17 @@ function ProfileViewContent() {
       {/* Navigation Tabs */}
       <div className="bg-[#1a1a1a] border-b border-[#333] sticky top-0 z-10">
         <div className="container mx-auto px-4">
-          <nav className="flex space-x-8">
+          <nav className="flex flex-wrap sm:flex-nowrap gap-1 sm:space-x-1 bg-[#2A2A2A] p-1 rounded-lg">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <motion.button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 py-4 px-2 border-b-2 font-mono text-sm transition-colors ${
+                  className={`flex items-center gap-2 py-2 px-2 sm:px-3 text-xs sm:text-sm font-mono rounded-md transition-all duration-200 ${
                     activeTab === tab.id
-                      ? 'border-[#FF9940] text-[#FF9940]'
-                      : 'border-transparent text-[#F9E4AD]/60 hover:text-[#F9E4AD]'
+                      ? 'bg-[#FF9940] text-black'
+                      : 'text-gray-400 hover:text-white hover:bg-[#3A3A3A]'
                   }`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
