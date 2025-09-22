@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient, User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Github, Globe, Twitter, Linkedin, MessageCircle } from "lucide-react";
+import { Github, Globe, Twitter, Linkedin, MessageCircle, MapPin } from "lucide-react";
 
 interface Member {
   id: string;
@@ -581,10 +581,14 @@ export default function MembersPage() {
                   )}
 
                   {/* Location + Availability */}
-                  <div className="mt-2 text-xs font-mono text-[#F9E4AD]/60">
-                    {member.location && <span>{member.location}</span>}
+                  <div className="mt-2 flex items-center gap-3 text-xs font-mono text-[#F9E4AD]/60">
+                    {member.location && (
+                      <span className="flex items-center gap-1">
+                        <MapPin size={12} className="text-[#E70008]" /> {member.location}
+                      </span>
+                    )}
                     {member.availability && (
-                      <span className="ml-2 bg-[#F9E4AD]/20 text-[#F9E4AD] px-2 py-1 rounded-lg">{member.availability}</span>
+                      <span className="bg-[#F9E4AD]/20 text-[#F9E4AD] px-2 py-1 rounded-lg">{member.availability}</span>
                     )}
                   </div>
 
