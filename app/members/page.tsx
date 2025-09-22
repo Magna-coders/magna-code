@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { createClient, User } from "@supabase/supabase-js";
-import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Github, Globe, Twitter, Linkedin, MessageCircle, MapPin, CheckCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface Member {
   id: string;
@@ -483,7 +483,7 @@ export default function MembersPage() {
              {filteredMembers.map((member, index) => (
               <motion.div
                 key={member.id}
-                className="bg-[#1a1a1a] border border-[#FF9940]/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg hover:border-[#E70008] transition-all duration-300"
+                className="bg-[#1a1a1a] border border-[#FF9940]/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg hover:border-[#E70008] transition-all duration-300 cursor-pointer"
                 variants={{
                   hidden: { opacity: 0, y: 20 },
                   visible: { opacity: 1, y: 0 }
@@ -496,6 +496,7 @@ export default function MembersPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1, duration: 0.5 }}
+                onClick={() => router.push(`/profile-view?member=${encodeURIComponent(JSON.stringify(member))}`)}
               >
                 <div>
                   <motion.div 
@@ -637,6 +638,7 @@ export default function MembersPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.8 }}
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <motion.button
                     onClick={() => handleSendRequest(member.id)}
