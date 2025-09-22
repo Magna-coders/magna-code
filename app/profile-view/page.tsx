@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Globe, Github, Twitter, Linkedin, MessageCircle, CheckCircle, Users, Folder, Activity, User, Info } from 'lucide-react';
 
@@ -23,7 +23,7 @@ interface Member {
   user_skills?: Array<{ skill_name: string }>;
 }
 
-export default function ProfileView() {
+function ProfileViewContent() {
   const searchParams = useSearchParams();
   const [member, setMember] = useState<Member | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
@@ -379,5 +379,15 @@ export default function ProfileView() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProfileView() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="text-[#F9E4AD] font-mono">Loading profile...</div>
+    </div>}>
+      <ProfileViewContent />
+    </Suspense>
   );
 }
