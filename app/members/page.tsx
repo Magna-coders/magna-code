@@ -531,7 +531,11 @@ export default function MembersPage() {
                       >
                         {member.username}
                         {member.username.toLowerCase() === 'ashwa' && (
-                          <CheckCircle size={16} className="text-[#1DA1F2] flex-shrink-0" />
+                          <div className="relative flex-shrink-0">
+                            <div className="w-4 h-4 bg-[#1DA1F2] rounded-full flex items-center justify-center">
+                              <CheckCircle size={10} className="text-white" />
+                            </div>
+                          </div>
                         )}
                       </motion.h3>
                       <p className="text-xs sm:text-sm font-mono text-[#F9E4AD]/60 truncate">{member.email}</p>
