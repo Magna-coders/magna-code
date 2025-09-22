@@ -140,12 +140,20 @@ export default function MembersPage() {
       statusMap[otherId] = "pending";
     });
 
-    // Sort members with "ashwa" first, then alphabetically
+    // Sort members: Ashwa first, then members with avatar icons, then alphabetically
     const sortedMembers = (allMembers || []).sort((a, b) => {
-      // If either member is "ashwa", prioritize them
+      // If either member is "ashwa", prioritize them first
       if (a.username.toLowerCase() === 'ashwa' && b.username.toLowerCase() !== 'ashwa') return -1;
       if (a.username.toLowerCase() !== 'ashwa' && b.username.toLowerCase() === 'ashwa') return 1;
-      // Otherwise, sort alphabetically
+      
+      // If neither is ashwa, prioritize members with avatar icons
+      const aHasAvatar = a.avatar_url && a.avatar_url !== null;
+      const bHasAvatar = b.avatar_url && b.avatar_url !== null;
+      
+      if (aHasAvatar && !bHasAvatar) return -1;
+      if (!aHasAvatar && bHasAvatar) return 1;
+      
+      // If both have avatars or neither has avatars, sort alphabetically
       return a.username.localeCompare(b.username);
     });
 
