@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient, User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Github, Globe, Twitter, Linkedin } from "lucide-react";
+import { Github, Globe, Twitter, Linkedin, MessageCircle } from "lucide-react";
 
 interface Member {
   id: string;
@@ -18,6 +18,7 @@ interface Member {
   github_url?: string;
   twitter_url?: string;
   linkedin_url?: string;
+  whatsapp_url?: string;
   user_categories?: { category_name: string }[];
   user_skills?: { skill_name: string }[];
   user_roles?: { role_name: string }[];
@@ -103,7 +104,7 @@ export default function MembersPage() {
     const { data: allMembers, error: membersError } = await supabase
       .from("users")
       .select(
-        `id, username, email, avatar_url, bio, location, availability, website_url, github_url, twitter_url, linkedin_url,
+        `id, username, email, avatar_url, bio, location, availability, website_url, github_url, twitter_url, linkedin_url, whatsapp_url,
          user_categories(category_name),
          user_skills(skill_name),
          user_roles(role_name)`
@@ -139,9 +140,18 @@ export default function MembersPage() {
       statusMap[otherId] = "pending";
     });
 
+    // Sort members with "ashwa" first, then alphabetically
+    const sortedMembers = (allMembers || []).sort((a, b) => {
+      // If either member is "ashwa", prioritize them
+      if (a.username.toLowerCase() === 'ashwa' && b.username.toLowerCase() !== 'ashwa') return -1;
+      if (a.username.toLowerCase() !== 'ashwa' && b.username.toLowerCase() === 'ashwa') return 1;
+      // Otherwise, sort alphabetically
+      return a.username.localeCompare(b.username);
+    });
+
     setConnections(statusMap);
-    setMembers(allMembers || []);
-    setFilteredMembers(allMembers || []);
+    setMembers(sortedMembers);
+    setFilteredMembers(sortedMembers);
     setLoading(false);
   };
 
@@ -579,7 +589,7 @@ export default function MembersPage() {
                   </div>
 
                   {/* Social Links */}
-                  {(member.website_url || member.github_url || member.twitter_url || member.linkedin_url) && (
+                  {(member.website_url || member.github_url || member.twitter_url || member.linkedin_url || member.whatsapp_url) && (
                     <div className="flex flex-wrap gap-2 mt-2">
                       {member.website_url && (
                         <a href={member.website_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#FF9940] hover:underline font-mono text-xs">
@@ -599,6 +609,11 @@ export default function MembersPage() {
                       {member.linkedin_url && (
                         <a href={member.linkedin_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#0A66C2] hover:underline font-mono text-xs">
                           <Linkedin size={16} /> LinkedIn
+                        </a>
+                      )}
+                      {member.whatsapp_url && (
+                        <a href={member.whatsapp_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#25D366] hover:underline font-mono text-xs">
+                          <MessageCircle size={16} /> WhatsApp
                         </a>
                       )}
                     </div>
