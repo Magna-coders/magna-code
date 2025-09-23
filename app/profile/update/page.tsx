@@ -288,7 +288,8 @@ export default function UpdateProfile() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">
+        <div className="mx-auto max-w-2xl lg:max-w-4xl">
         {loading ? (
           <motion.div 
             className="flex justify-center items-center h-48 sm:h-64"
@@ -314,7 +315,7 @@ export default function UpdateProfile() {
           </motion.div>
         ) : (
           <motion.div 
-            className="bg-gradient-to-r from-[#E70008]/10 to-[#FF9940]/10 rounded-lg p-4 sm:p-6 lg:p-8 border border-[#E70008]/30"
+            className="bg-gradient-to-r from-[#E70008]/10 to-[#FF9940]/10 rounded-lg p-6 sm:p-8 lg:p-10 border border-[#E70008]/30 shadow-lg"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
@@ -328,10 +329,10 @@ export default function UpdateProfile() {
               Update Your Profile
             </motion.h2>
             
-            <motion.form onSubmit={handleSubmit} className="space-y-6">
+            <motion.form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               {/* Profile Picture Upload */}
               <motion.div 
-                className="flex flex-col items-center"
+                className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
@@ -406,7 +407,7 @@ export default function UpdateProfile() {
                   value={profile.bio}
                   onChange={(e) => handleInputChange('bio', e.target.value)}
                   rows={3}
-                  className="w-full px-3 sm:px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940] text-sm sm:text-base"
+                  className="w-full px-4 py-3 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940] text-base sm:text-lg min-h-[48px]"
                   placeholder="Tell us about yourself"
                   whileFocus={{ scale: 1.01, borderColor: "#FF9940" }}
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
@@ -427,7 +428,7 @@ export default function UpdateProfile() {
                   Skills
                 </motion.label>
                 <motion.div 
-                  className="flex gap-2 mb-3"
+                  className="flex flex-col sm:flex-row gap-2 mb-3"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.4, delay: 0.6 }}
@@ -437,7 +438,7 @@ export default function UpdateProfile() {
                     value={newSkill}
                     onChange={(e) => setNewSkill(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
-                    className="flex-1 px-3 sm:px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940] text-sm sm:text-base"
+                    className="flex-1 px-4 py-3 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940] text-base sm:text-lg min-h-[48px]"
                     placeholder="Enter any skill you have"
                     whileFocus={{ scale: 1.01, borderColor: "#FF9940" }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
@@ -445,7 +446,7 @@ export default function UpdateProfile() {
                   <motion.button
                     type="button"
                     onClick={handleAddSkill}
-                    className="px-3 sm:px-4 py-2 bg-[#E70008] text-black font-mono font-bold rounded-md hover:bg-[#FF9940] transition-colors text-sm sm:text-base"
+                    className="px-6 py-3 bg-[#E70008] text-black font-mono font-bold rounded-md hover:bg-[#FF9940] transition-colors text-base sm:text-lg min-h-[48px]"
                     whileHover={{ scale: 1.05, backgroundColor: "#FF9940" }}
                     whileTap={{ scale: 0.95 }}
                     transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -513,7 +514,7 @@ export default function UpdateProfile() {
                   type="text"
                   value={profile.location}
                   onChange={(e) => handleInputChange('location', e.target.value)}
-                  className="w-full px-3 sm:px-4 py-2 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940] text-sm sm:text-base"
+                  className="w-full px-4 py-3 bg-[#E70008]/20 border border-[#E70008] rounded-lg text-[#FF9940] placeholder-[#FF9940]/60 focus:border-[#FF9940] focus:ring-1 focus:ring-[#FF9940] text-base sm:text-lg min-h-[48px]"
                   placeholder="City, Country"
                   whileFocus={{ scale: 1.01, borderColor: "#FF9940" }}
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
@@ -522,7 +523,7 @@ export default function UpdateProfile() {
 
               {/* Links */}
               <motion.div 
-                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.7 }}
@@ -575,7 +576,7 @@ export default function UpdateProfile() {
               </motion.div>
 
               <motion.div 
-                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.9 }}
@@ -679,7 +680,7 @@ export default function UpdateProfile() {
 
               {/* Submit Button */}
               <motion.div 
-                className="flex gap-4 pt-4"
+                className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 1.2 }}
@@ -687,7 +688,7 @@ export default function UpdateProfile() {
                 <motion.button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 py-3 px-4 bg-[#E70008] text-black font-mono font-bold rounded-md hover:bg-[#FF9940] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-4 px-6 bg-[#E70008] text-black font-mono font-bold rounded-md hover:bg-[#FF9940] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-base sm:text-lg min-h-[56px]"
                   whileHover={{ scale: 1.05, backgroundColor: "#FF9940" }}
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -717,7 +718,7 @@ export default function UpdateProfile() {
                       user_roles: [],
                       user_skills: profile.skills.map(skill => ({ skill_name: skill.name, availability: skill.availability }))
                     }))}`}
-                    className="flex-1 py-3 px-4 bg-transparent border border-[#FF9940] text-[#FF9940] font-mono font-bold rounded-md text-center hover:bg-[#FF9940]/20 hover:text-[#FF9940] transition-colors"
+                    className="flex-1 py-4 px-6 bg-transparent border border-[#FF9940] text-[#FF9940] font-mono font-bold rounded-md text-center hover:bg-[#FF9940]/20 hover:text-[#FF9940] transition-colors text-base sm:text-lg min-h-[56px] flex items-center justify-center"
                   >
                     View Profile
                   </Link>
@@ -729,7 +730,7 @@ export default function UpdateProfile() {
                 >
                   <Link
                     href="/dashboard"
-                    className="flex-1 py-3 px-4 bg-transparent border border-[#E70008] text-[#FF9940] font-mono font-bold rounded-md text-center hover:bg-[#E70008]/20 hover:text-[#FF9940] transition-colors"
+                    className="flex-1 py-4 px-6 bg-transparent border border-[#E70008] text-[#FF9940] font-mono font-bold rounded-md text-center hover:bg-[#E70008]/20 hover:text-[#FF9940] transition-colors text-base sm:text-lg min-h-[56px] flex items-center justify-center"
                   >
                     Cancel
                   </Link>
@@ -738,6 +739,7 @@ export default function UpdateProfile() {
             </motion.form>
           </motion.div>
         )}
+        </div>
       </main>
     </div>
   );
