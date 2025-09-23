@@ -700,6 +700,34 @@ export default function UpdateProfile() {
                   transition={{ type: "spring", stiffness: 400, damping: 10 }}
                 >
                   <Link
+                    href={`/profile-view?member=${encodeURIComponent(JSON.stringify({
+                      id: user?.id,
+                      username: user?.user_metadata?.username || user?.email?.split('@')[0] || 'User',
+                      email: user?.email,
+                      avatar_url: profile.profilePic,
+                      bio: profile.bio,
+                      location: profile.location,
+                      availability: profile.availability,
+                      website_url: profile.website,
+                      github_url: profile.github,
+                      twitter_url: profile.twitter,
+                      linkedin_url: profile.linkedin,
+                      whatsapp_url: profile.whatsapp,
+                      user_categories: [],
+                      user_roles: [],
+                      user_skills: profile.skills.map(skill => ({ skill_name: skill.name, availability: skill.availability }))
+                    }))}`}
+                    className="flex-1 py-3 px-4 bg-transparent border border-[#FF9940] text-[#FF9940] font-mono font-bold rounded-md text-center hover:bg-[#FF9940]/20 hover:text-[#FF9940] transition-colors"
+                  >
+                    View Profile
+                  </Link>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
+                  <Link
                     href="/dashboard"
                     className="flex-1 py-3 px-4 bg-transparent border border-[#E70008] text-[#FF9940] font-mono font-bold rounded-md text-center hover:bg-[#E70008]/20 hover:text-[#FF9940] transition-colors"
                   >
