@@ -38,6 +38,16 @@ interface Project {
   createdAt: string;
 }
 
+interface ConnectionRequest {
+  id: string;
+  sender_id: string;
+  sender_username: string;
+  sender_email: string;
+  sender_avatar_url?: string | null;
+  created_at: string;
+  message?: string;
+}
+
 // Initialize Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,6 +57,7 @@ const supabase = createClient(
 export default function HomeDashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [connectionRequests, setConnectionRequests] = useState<ConnectionRequest[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -66,6 +77,37 @@ export default function HomeDashboard() {
     };
   }, []);
 
+  const fetchConnectionRequests = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('pending_friend_requests')
+        .select('*')
+        .eq('receiver_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching connection requests:', error);
+        return;
+      }
+
+      if (data) {
+        const requestsData: ConnectionRequest[] = data.map(request => ({
+          id: request.id,
+          sender_id: request.sender_id,
+          sender_username: request.sender_username,
+          sender_email: request.sender_email,
+          sender_avatar_url: request.sender_avatar_url,
+          created_at: request.created_at,
+          message: request.message
+        }));
+        console.log('Connection requests fetched:', requestsData.length);
+        setConnectionRequests(requestsData);
+      }
+    } catch (error) {
+      console.error('Error fetching connection requests:', error);
+    }
+  };
+
   const fetchUserData = async () => {
     try {
       // Get the current authenticated user
@@ -78,6 +120,9 @@ export default function HomeDashboard() {
       }
       
       const authUser = session.user;
+
+      // Fetch connection requests
+      await fetchConnectionRequests(authUser.id);
 
       // Fetch user profile from public.users table
       const { data: userData, error: userError } = await supabase
@@ -250,10 +295,11 @@ export default function HomeDashboard() {
   const quickActions = [
     {
       title: "Friends",
-      description: "View and manage your friends",
+      description: connectionRequests.length > 0 ? `${connectionRequests.length} pending requests` : "View and manage your friends",
       icon: "🤗",
       action: () => window.location.href = "/friends",
-      color: "bg-[#F9E4AD] text-black"
+      color: "bg-[#F9E4AD] text-black",
+      badge: connectionRequests.length > 0 ? connectionRequests.length : null
     },
     {
       title: "Find Members",
@@ -469,13 +515,18 @@ export default function HomeDashboard() {
               <motion.button
                 key={index}
                 onClick={action.action}
-                className="block w-full text-left p-6 rounded-lg border border-[#E70008]/30 hover:border-[#FF9940] transition-all duration-300 hover:shadow-lg hover:shadow-[#E70008]/20"
+                className="block w-full text-left p-6 rounded-lg border border-[#E70008]/30 hover:border-[#FF9940] transition-all duration-300 hover:shadow-lg hover:shadow-[#E70008]/20 relative"
                 whileHover={{ scale: 1.04, boxShadow: "0 4px 24px #E7000855" }}
                 whileTap={{ scale: 0.98 }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.1 * index }}
               >
+                {action.badge && (
+                  <div className="absolute top-2 right-2 bg-[#E70008] text-white text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center">
+                    {action.badge}
+                  </div>
+                )}
                 <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center text-2xl mb-3`}>
                   {action.icon}
                 </div>
