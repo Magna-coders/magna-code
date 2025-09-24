@@ -233,8 +233,8 @@ export default function CreateAccount() {
           }
         }
 
-        // Success - redirect to profile update page
-        router.push('/profile/update');
+        // Success - redirect to dashboard
+        router.push('/dashboard');
       }
     } catch (error: unknown) {
       console.error('Registration error:', error);
