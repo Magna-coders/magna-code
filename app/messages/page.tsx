@@ -63,7 +63,16 @@ function MessagesContent() {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [startingConversation, setStartingConversation] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"conversations" | "friends" | "requests">("conversations");
+  const [friendSearchQuery, setFriendSearchQuery] = useState("");
+  const [friendsPage, setFriendsPage] = useState(0);
+  const friendsPerPage = 6;
+
+  // Reset pagination when search query changes
+  useEffect(() => {
+    setFriendsPage(0);
+  }, [friendSearchQuery]);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -95,58 +104,95 @@ function MessagesContent() {
     if (!currentUser) return;
 
     const fetchConversations = async () => {
-      const { data, error } = await supabase
-        .from("conversations")
-        .select(
-          `
-          id, type,
-          participants:conversation_participants(user_id, users(id, username, avatar_url)),
+      // For now, only fetch friend conversations to ensure privacy
+      // This ensures users only see conversations with their friends
+      console.log("Fetching conversations for user:", currentUser.id);
+      
+      const { data: friendConversationsData, error: friendError } = await supabase
+        .from("friend_conversations")
+        .select(`
+          id,
+          user1_id,
+          user2_id,
+          created_at,
           last_message:messages(id, sender_id, content, created_at, sender:users(id, username, avatar_url))
-          `
-        )
+        `)
+        .or(`user1_id.eq.${currentUser.id},user2_id.eq.${currentUser.id}`)
         .order("id", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching conversations:", error);
+      console.log("Raw friend conversations data:", friendConversationsData);
+      console.log("Friend conversations error:", friendError);
+
+      if (friendError) {
+        console.error("Error fetching friend conversations:", friendError);
+        setConversations([]);
+        setLoading(false);
         return;
       }
 
-      // Transform the data to match the Conversation interface
-      const transformedData: Conversation[] = (data as unknown as Conversation[] || []).map((conv: unknown) => {
-        const conversation = conv as {
-          id: string;
-          type: 'direct' | 'group';
-          participants: unknown[];
-          last_message?: unknown[];
-        };
-        
-        return {
-          id: conversation.id,
-          type: conversation.type,
-          participants: (conversation.participants as unknown[] || []).map((p: unknown) => {
-            const participant = p as {
-              user_id: string;
-              users: unknown[];
-            };
-            return {
-              user_id: participant.user_id,
-              users: (participant.users as unknown[])[0] as User // The users array should contain the user object
-            };
-          }),
-          last_message: conversation.last_message?.[0] ? {
-            id: (conversation.last_message[0] as { id: string }).id,
-            sender_id: (conversation.last_message[0] as { sender_id: string }).sender_id,
-            content: (conversation.last_message[0] as { content: string }).content,
-            created_at: (conversation.last_message[0] as { created_at: string }).created_at,
-            sender: ((conversation.last_message[0] as { sender: unknown[] }).sender?.[0] as User | undefined) // sender is also an array from Supabase
-          } : undefined
-        };
-      });
+      console.log("Friend conversations count:", friendConversationsData?.length || 0);
 
-      setConversations(transformedData);
+      // Transform conversations data - only friend conversations
+      const transformedConversations: Conversation[] = [];
+
+      // Process friend conversations
+      if (friendConversationsData) {
+        // Get friend details for better participant information
+        const friendIds = friendConversationsData.map((conv: any) => {
+          const friendConv = conv as { user1_id: string; user2_id: string };
+          return friendConv.user1_id === currentUser.id ? friendConv.user2_id : friendConv.user1_id;
+        });
+
+        // Fetch friend details
+        const { data: friendsData } = await supabase
+          .from("user_friends")
+          .select("friend_id, username, avatar_url")
+          .in("friend_id", friendIds)
+          .eq("user_id", currentUser.id);
+
+        const friendMap = new Map();
+        friendsData?.forEach((friend: any) => {
+          friendMap.set(friend.friend_id, friend);
+        });
+
+        const friendConversations = (friendConversationsData as unknown[]).map((conv: unknown) => {
+          const friendConv = conv as {
+            id: string;
+            user1_id: string;
+            user2_id: string;
+            created_at: string;
+            last_message?: unknown[];
+          };
+
+          // Get the other user's ID
+          const otherUserId = friendConv.user1_id === currentUser.id ? friendConv.user2_id : friendConv.user1_id;
+          const friendInfo = friendMap.get(otherUserId) || { friend_id: otherUserId, username: 'Friend', avatar_url: null };
+
+          return {
+            id: friendConv.id,
+            type: 'direct' as const,
+            participants: [
+              { user_id: currentUser.id, users: currentUser },
+              { user_id: otherUserId, users: { id: otherUserId, username: friendInfo.username, avatar_url: friendInfo.avatar_url } }
+            ],
+            last_message: friendConv.last_message?.[0] ? {
+              id: (friendConv.last_message[0] as { id: string }).id,
+              sender_id: (friendConv.last_message[0] as { sender_id: string }).sender_id,
+              content: (friendConv.last_message[0] as { content: string }).content,
+              created_at: (friendConv.last_message[0] as { created_at: string }).created_at,
+              sender: ((friendConv.last_message[0] as { sender: unknown[] }).sender?.[0] as User | undefined)
+            } : undefined
+          };
+        });
+        transformedConversations.push(...friendConversations);
+      }
+
+      setConversations(transformedConversations);
+      console.log("Transformed conversations:", transformedConversations);
+      console.log("Current conversations state will be:", transformedConversations);
 
       if (conversationId) {
-        const found = transformedData.find((c) => c.id === conversationId);
+        const found = transformedConversations.find((c) => c.id === conversationId);
         if (found) {
           setSelectedConversation(found);
           fetchMessages(found.id);
@@ -234,6 +280,16 @@ function MessagesContent() {
     });
     
     setMessages(transformedMessages);
+    
+    // Update the conversation's last message if there are messages
+    if (transformedMessages.length > 0) {
+      const lastMessage = transformedMessages[transformedMessages.length - 1];
+      setConversations((prev) => prev.map(conv => 
+        conv.id === convId 
+          ? { ...conv, last_message: lastMessage }
+          : conv
+      ));
+    }
   };
 
   // 4. Send message
@@ -275,6 +331,18 @@ function MessagesContent() {
     };
     
     setMessages((prev) => [...prev, transformedMessage]);
+    console.log("Message sent, updating conversations list...");
+    
+    // Update the conversation's last message in the conversations list
+    setConversations((prev) => {
+      // Simply update the conversation's last message
+      return prev.map(conv => 
+        conv.id === selectedConversation.id 
+          ? { ...conv, last_message: transformedMessage }
+          : conv
+      );
+    });
+    
     setNewMessage("");
     setSending(false);
     
@@ -289,9 +357,227 @@ function MessagesContent() {
 
   // 5. Select conversation
   const selectConversation = (conv: Conversation) => {
+    // Add conversation to list if it doesn't exist
+    setConversations((prev) => {
+      const exists = prev.some(c => c.id === conv.id);
+      if (!exists) {
+        return [conv, ...prev];
+      }
+      return prev;
+    });
+    
     setSelectedConversation(conv);
     fetchMessages(conv.id);
   };
+
+  // Real-time subscription for messages
+  useEffect(() => {
+    if (!selectedConversation || !currentUser) return;
+
+    // Subscribe to new messages in the current conversation
+    const subscription = supabase
+      .channel(`messages:${selectedConversation.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${selectedConversation.id}`
+        },
+        async (payload) => {
+          // Skip messages from the current user (they're already handled by sendMessage)
+          if (payload.new.sender_id === currentUser.id) {
+            return;
+          }
+
+          // Fetch the complete message with sender info
+          const { data, error } = await supabase
+            .from('messages')
+            .select('id, sender_id, content, created_at, sender:users(id, username, avatar_url)')
+            .eq('id', payload.new.id)
+            .single();
+
+          if (error) {
+            console.error('Error fetching new message:', error);
+            return;
+          }
+
+          // Transform the message data
+          const transformedMessage: Message = {
+            id: data.id as string,
+            sender_id: data.sender_id as string,
+            content: data.content as string,
+            created_at: data.created_at as string,
+            sender: data.sender && Array.isArray(data.sender) && data.sender.length > 0 
+              ? {
+                  id: data.sender[0].id as string,
+                  username: data.sender[0].username as string,
+                  avatar_url: data.sender[0].avatar_url as string | null
+                }
+              : undefined
+          };
+
+          // Add the new message to the messages array
+          setMessages((prev) => [...prev, transformedMessage]);
+
+          // Update the conversation's last message
+          setConversations((prev) => 
+            prev.map(conv => 
+              conv.id === selectedConversation.id 
+                ? { ...conv, last_message: transformedMessage }
+                : conv
+            )
+          );
+
+          // Scroll to bottom when new message is received
+          setTimeout(() => {
+            const messagesContainer = document.querySelector('.flex-1.overflow-y-auto');
+            if (messagesContainer) {
+              messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+          }, 100);
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription when conversation changes or component unmounts
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, [selectedConversation?.id, currentUser?.id]);
+
+  // Real-time subscription for new conversations
+  useEffect(() => {
+    if (!currentUser) return;
+
+    // Subscribe to new friend conversations where current user is involved
+    const conversationSubscription = supabase
+      .channel(`friend_conversations:${currentUser.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'friend_conversations',
+          filter: `or(user1_id.eq.${currentUser.id},user2_id.eq.${currentUser.id})`
+        },
+        async (payload) => {
+          // Fetch the complete conversation with participant details
+          const friendConv = payload.new as {
+            id: string;
+            user1_id: string;
+            user2_id: string;
+            created_at: string;
+          };
+
+          // Get the other user's ID
+          const otherUserId = friendConv.user1_id === currentUser.id ? friendConv.user2_id : friendConv.user1_id;
+
+          // Fetch friend details
+          const { data: friendData } = await supabase
+            .from("user_friends")
+            .select("friend_id, username, avatar_url")
+            .eq("friend_id", otherUserId)
+            .eq("user_id", currentUser.id)
+            .single();
+
+          const friendInfo = friendData || { friend_id: otherUserId, username: 'Friend', avatar_url: null };
+
+          // Create new conversation object
+          const newConversation: Conversation = {
+            id: friendConv.id,
+            type: 'direct',
+            participants: [
+              { user_id: currentUser.id, users: currentUser },
+              { user_id: otherUserId, users: { id: otherUserId, username: friendInfo.username, avatar_url: friendInfo.avatar_url } }
+            ]
+          };
+
+          // Add to conversations list if it doesn't already exist
+          setConversations(prev => {
+            const exists = prev.some(conv => conv.id === friendConv.id);
+            if (!exists) {
+              return [newConversation, ...prev];
+            }
+            return prev;
+          });
+        }
+      )
+      .subscribe();
+
+    // Subscribe to new participants being added to conversations
+    const participantSubscription = supabase
+      .channel(`participants:${currentUser.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'conversation_participants',
+          filter: `user_id.eq.${currentUser.id}`
+        },
+        async (payload) => {
+          // A new participant was added (user was added to a conversation)
+          const participant = payload.new as {
+            conversation_id: string;
+            user_id: string;
+            joined_at: string;
+          };
+
+          // Check if this is a regular conversation (not friend_conversation)
+          const { data: conversationData } = await supabase
+            .from('conversations')
+            .select('id, type')
+            .eq('id', participant.conversation_id)
+            .single();
+
+          if (conversationData) {
+            // Fetch the complete conversation with participants
+            const { data: completeConversation } = await supabase
+              .from('conversations')
+              .select(`
+                id, type,
+                participants:conversation_participants(user_id, users(id, username, avatar_url))
+              `)
+              .eq('id', participant.conversation_id)
+              .single();
+
+            if (completeConversation) {
+              const newConversation: Conversation = {
+                id: completeConversation.id,
+                type: completeConversation.type,
+                participants: (completeConversation.participants as unknown[] || []).map((p: unknown) => {
+                  const participant = p as {
+                    user_id: string;
+                    users: unknown[];
+                  };
+                  return {
+                    user_id: participant.user_id,
+                    users: (participant.users as unknown[])[0] as User
+                  };
+                })
+              };
+
+              // Add to conversations list if it doesn't already exist
+              setConversations(prev => {
+                const exists = prev.some(conv => conv.id === completeConversation.id);
+                if (!exists) {
+                  return [newConversation, ...prev];
+                }
+                return prev;
+              });
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(conversationSubscription);
+      supabase.removeChannel(participantSubscription);
+    };
+  }, [currentUser?.id]);
 
   // 6. Back button
   const goBack = () => {
@@ -301,56 +587,125 @@ function MessagesContent() {
 
   // 7. Start conversation with friend
   const startConversationWithFriend = async (friend: Friend) => {
-    if (!currentUser) return;
+    if (!currentUser || startingConversation) return;
 
-    // Check if conversation already exists
-    const existingConversation = conversations.find(conv => {
-      const friendParticipant = conv.participants.find(p => p.user_id === friend.friend_id);
-      return friendParticipant && conv.type === 'direct';
-    });
+    setStartingConversation(friend.friend_id);
 
-    if (existingConversation) {
-      selectConversation(existingConversation);
-      return;
+    try {
+      // Check if conversation already exists in friend_conversations table
+      const { data: existingConversationData, error: checkError } = await supabase
+        .from('friend_conversations')
+        .select('id')
+        .or(`and(user1_id.eq.${currentUser.id},user2_id.eq.${friend.friend_id}),and(user1_id.eq.${friend.friend_id},user2_id.eq.${currentUser.id})`)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "not found" error
+        console.error('Error checking existing conversation:', checkError);
+        return;
+      }
+
+      if (existingConversationData) {
+        // Conversation exists, find it in our conversations array and select it
+        const existingConversation = conversations.find(conv => conv.id === existingConversationData.id);
+        if (existingConversation) {
+          selectConversation(existingConversation);
+          return;
+        } else {
+          // Conversation exists in DB but not in local array, just select it
+          const friendUser = { id: friend.friend_id, username: friend.username, avatar_url: friend.avatar_url };
+          const newConversation: Conversation = {
+            id: existingConversationData.id,
+            type: 'direct',
+            participants: [
+              { user_id: currentUser.id, users: currentUser },
+              { user_id: friend.friend_id, users: friendUser }
+            ]
+          };
+          selectConversation(newConversation);
+          return;
+        }
+      }
+
+      // Create new conversation in friend_conversations table
+      const { data: conversationData, error: conversationError } = await supabase
+        .from('friend_conversations')
+        .insert([{ 
+          user1_id: currentUser.id,
+          user2_id: friend.friend_id,
+          created_at: new Date().toISOString()
+        }])
+        .select('id')
+        .single();
+
+      if (conversationError) {
+        if (conversationError.code === '23505') {
+          // Duplicate key error - conversation already exists, try to find and select it
+          const { data: duplicateConversationData } = await supabase
+            .from('friend_conversations')
+            .select('id')
+            .or(`and(user1_id.eq.${currentUser.id},user2_id.eq.${friend.friend_id}),and(user1_id.eq.${friend.friend_id},user2_id.eq.${currentUser.id})`)
+            .single();
+          
+          if (duplicateConversationData) {
+             const existingConversation = conversations.find(conv => conv.id === duplicateConversationData.id);
+             if (existingConversation) {
+               selectConversation(existingConversation);
+             } else {
+               // Conversation exists but not in our array, manually add it
+               const friendUser = { id: friend.friend_id, username: friend.username, avatar_url: friend.avatar_url };
+               const newConversation: Conversation = {
+                 id: duplicateConversationData.id,
+                 type: 'direct',
+                 participants: [
+                   { user_id: currentUser.id, users: currentUser },
+                   { user_id: friend.friend_id, users: friendUser }
+                 ]
+               };
+               selectConversation(newConversation);
+             }
+           }
+        } else {
+          console.error('Error creating friend conversation:', conversationError);
+        }
+        return;
+      }
+
+      // CRITICAL: Add both users as participants in conversation_participants table
+      const { error: participantsError } = await supabase
+        .from('conversation_participants')
+        .insert([
+          { 
+            conversation_id: conversationData.id,
+            user_id: currentUser.id,
+            joined_at: new Date().toISOString()
+          },
+          { 
+            conversation_id: conversationData.id,
+            user_id: friend.friend_id,
+            joined_at: new Date().toISOString()
+          }
+        ]);
+
+      if (participantsError) {
+        console.error('Error adding participants:', participantsError);
+        return;
+      }
+
+      // Create new conversation object
+      const newConversation: Conversation = {
+        id: conversationData.id,
+        type: 'direct',
+        participants: [
+          { user_id: currentUser.id, users: currentUser },
+          { user_id: friend.friend_id, users: { id: friend.friend_id, username: friend.username, avatar_url: friend.avatar_url } }
+        ]
+      };
+
+      // Select the conversation (it will be added to the list if needed)
+      selectConversation(newConversation);
+    } finally {
+      setStartingConversation(null);
     }
-
-    // Create new conversation
-    const { data: conversationData, error: conversationError } = await supabase
-      .from('conversations')
-      .insert([{ type: 'direct' }])
-      .select('id')
-      .single();
-
-    if (conversationError) {
-      console.error('Error creating conversation:', conversationError);
-      return;
-    }
-
-    // Add participants
-    const { error: participantsError } = await supabase
-      .from('conversation_participants')
-      .insert([
-        { conversation_id: conversationData.id, user_id: currentUser.id },
-        { conversation_id: conversationData.id, user_id: friend.friend_id }
-      ]);
-
-    if (participantsError) {
-      console.error('Error adding participants:', participantsError);
-      return;
-    }
-
-    // Create new conversation object
-    const newConversation: Conversation = {
-      id: conversationData.id,
-      type: 'direct',
-      participants: [
-        { user_id: currentUser.id, users: currentUser },
-        { user_id: friend.friend_id, users: { id: friend.friend_id, username: friend.username, avatar_url: friend.avatar_url } }
-      ]
-    };
-
-    setConversations(prev => [newConversation, ...prev]);
-    selectConversation(newConversation);
   };
 
   // 8. Accept friend request
@@ -536,10 +891,12 @@ function MessagesContent() {
                 )}
 
                 {conversations.map((conv, index) => {
+                  console.log("Rendering conversation:", conv.id, "participants:", conv.participants);
                   const friendParticipant = conv.participants.find(
                     (p) => p.user_id !== currentUser?.id
                   );
                   const friendUser = friendParticipant?.users;
+                  console.log("Friend participant:", friendParticipant, "friend user:", friendUser);
 
                   return (
                     <motion.div
@@ -605,6 +962,27 @@ function MessagesContent() {
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.3 }}
               >
+                {/* Search Bar */}
+                <motion.div 
+                  className="p-4 border-b border-[#333]"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search friends..."
+                      value={friendSearchQuery}
+                      onChange={(e) => setFriendSearchQuery(e.target.value)}
+                      className="w-full bg-[#222] text-white px-4 py-2 pl-10 rounded-lg border border-[#333] focus:border-[#FF9940] focus:outline-none transition-colors"
+                    />
+                    <div className="absolute left-3 top-2.5 text-gray-400">
+                      🔍
+                    </div>
+                  </div>
+                </motion.div>
+
                 {friends.length === 0 && (
                   <motion.div 
                     className="p-4 text-center text-gray-400"
@@ -618,11 +996,37 @@ function MessagesContent() {
                   </motion.div>
                 )}
 
-                {friends.map((friend, index) => (
+                {friends.length > 0 && friends.filter(friend => 
+                  friendSearchQuery === "" || 
+                  friend.username.toLowerCase().includes(friendSearchQuery.toLowerCase()) ||
+                  (friend.bio && friend.bio.toLowerCase().includes(friendSearchQuery.toLowerCase()))
+                ).length === 0 && friendSearchQuery !== "" && (
+                  <motion.div 
+                    className="p-4 text-center text-gray-400"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    <p>No friends found matching "{friendSearchQuery}"</p>
+                    <p className="text-xs mt-1">Try a different search term</p>
+                  </motion.div>
+                )}
+
+                {friends
+                  .filter(friend => 
+                    friendSearchQuery === "" || 
+                    friend.username.toLowerCase().includes(friendSearchQuery.toLowerCase()) ||
+                    (friend.bio && friend.bio.toLowerCase().includes(friendSearchQuery.toLowerCase()))
+                  )
+                  .slice(friendsPage * friendsPerPage, (friendsPage + 1) * friendsPerPage)
+                  .map((friend, index) => (
                   <motion.div
                     key={friend.friend_id}
                     onClick={() => startConversationWithFriend(friend)}
-                    className="p-4 border-b border-[#333] cursor-pointer hover:bg-[#222] transition-colors"
+                    className={`p-4 border-b border-[#333] cursor-pointer hover:bg-[#222] transition-colors ${
+                      startingConversation === friend.friend_id ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                     initial={{ x: -50, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ 
@@ -630,8 +1034,8 @@ function MessagesContent() {
                       type: "spring",
                       stiffness: 100
                     }}
-                    whileHover={{ scale: 1.02, x: 5 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: startingConversation === friend.friend_id ? 1 : 1.02, x: startingConversation === friend.friend_id ? 0 : 5 }}
+                    whileTap={{ scale: startingConversation === friend.friend_id ? 1 : 0.98 }}
                   >
                     <div className="flex items-center space-x-3">
                       <motion.div 
@@ -662,12 +1066,82 @@ function MessagesContent() {
                           Connected {formatDistanceToNow(new Date(friend.connected_at), { addSuffix: true })}
                         </span>
                       </div>
-                      <div className="text-[#FF9940] text-sm">
-                        💬
-                      </div>
+                      {startingConversation === friend.friend_id ? (
+                        <div className="w-4 h-4 border-2 border-[#FF9940] border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <div className="text-[#FF9940] text-sm">
+                          💬
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 ))}
+                
+                {/* Pagination Controls */}
+                {friends.filter(friend => 
+                  friendSearchQuery === "" || 
+                  friend.username.toLowerCase().includes(friendSearchQuery.toLowerCase()) ||
+                  (friend.bio && friend.bio.toLowerCase().includes(friendSearchQuery.toLowerCase()))
+                ).length > friendsPerPage && (
+                  <motion.div 
+                    className="flex justify-between items-center p-4 border-t border-[#333]"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <motion.button
+                      onClick={() => setFriendsPage(prev => Math.max(0, prev - 1))}
+                      disabled={friendsPage === 0}
+                      className={`px-3 py-1 rounded-md text-sm transition-colors ${
+                        friendsPage === 0 
+                          ? 'bg-[#222] text-gray-500 cursor-not-allowed' 
+                          : 'bg-[#FF9940] text-black hover:bg-[#E70008]'
+                      }`}
+                      whileHover={friendsPage === 0 ? {} : { scale: 1.05 }}
+                      whileTap={friendsPage === 0 ? {} : { scale: 0.95 }}
+                    >
+                      ← Previous
+                    </motion.button>
+                    
+                    <span className="text-sm text-gray-400">
+                      Page {friendsPage + 1} of {Math.ceil(friends.filter(friend => 
+                        friendSearchQuery === "" || 
+                        friend.username.toLowerCase().includes(friendSearchQuery.toLowerCase()) ||
+                        (friend.bio && friend.bio.toLowerCase().includes(friendSearchQuery.toLowerCase()))
+                      ).length / friendsPerPage)}
+                    </span>
+                    
+                    <motion.button
+                      onClick={() => setFriendsPage(prev => prev + 1)}
+                      disabled={(friendsPage + 1) * friendsPerPage >= friends.filter(friend => 
+                        friendSearchQuery === "" || 
+                        friend.username.toLowerCase().includes(friendSearchQuery.toLowerCase()) ||
+                        (friend.bio && friend.bio.toLowerCase().includes(friendSearchQuery.toLowerCase()))
+                      ).length}
+                      className={`px-3 py-1 rounded-md text-sm transition-colors ${
+                        (friendsPage + 1) * friendsPerPage >= friends.filter(friend => 
+                          friendSearchQuery === "" || 
+                          friend.username.toLowerCase().includes(friendSearchQuery.toLowerCase()) ||
+                          (friend.bio && friend.bio.toLowerCase().includes(friendSearchQuery.toLowerCase()))
+                        ).length
+                          ? 'bg-[#222] text-gray-500 cursor-not-allowed' 
+                          : 'bg-[#FF9940] text-black hover:bg-[#E70008]'
+                      }`}
+                      whileHover={(friendsPage + 1) * friendsPerPage >= friends.filter(friend => 
+                        friendSearchQuery === "" || 
+                        friend.username.toLowerCase().includes(friendSearchQuery.toLowerCase()) ||
+                        (friend.bio && friend.bio.toLowerCase().includes(friendSearchQuery.toLowerCase()))
+                      ).length ? {} : { scale: 1.05 }}
+                      whileTap={(friendsPage + 1) * friendsPerPage >= friends.filter(friend => 
+                        friendSearchQuery === "" || 
+                        friend.username.toLowerCase().includes(friendSearchQuery.toLowerCase()) ||
+                        (friend.bio && friend.bio.toLowerCase().includes(friendSearchQuery.toLowerCase()))
+                      ).length ? {} : { scale: 0.95 }}
+                    >
+                      Next →
+                    </motion.button>
+                  </motion.div>
+                )}
               </motion.div>
             )}
 
