@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { createClient, User } from "@supabase/supabase-js";
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { User } from "@supabase/supabase-js";
+import { supabase } from "@/src/lib/supabase/client";
 
 interface Friend {
   id: string;
@@ -25,11 +27,7 @@ interface ConnectionRequest {
   message?: string;
 }
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+
 
 export default function FriendsList() {
   const [friends, setFriends] = useState<Friend[]>([]);

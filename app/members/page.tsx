@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient, User } from "@supabase/supabase-js";
+import { User } from "@supabase/supabase-js";
 import { motion, AnimatePresence } from "framer-motion";
 import { Github, Globe, Twitter, Linkedin, MessageCircle, MapPin, CheckCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/src/lib/supabase/client";
 
 interface Member {
   id: string;
@@ -26,10 +27,7 @@ interface Member {
 
 type ConnectionStatus = "friend" | "pending" | "none";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+
 
 export default function MembersPage() {
   const [members, setMembers] = useState<Member[]>([]);

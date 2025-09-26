@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import ChatButton from '@/components/chat/ChatButton';
+import { supabase } from '@/src/lib/supabase/client';
 
 interface User {
   id: string;
@@ -48,11 +48,7 @@ interface ConnectionRequest {
   message?: string;
 }
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+
 
 export default function HomeDashboard() {
   const [user, setUser] = useState<User | null>(null);

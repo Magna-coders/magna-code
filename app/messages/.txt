@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
+import { createClient } from "@supabase/supabase-js";
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/src/lib/supabase/client";
-import { subscriptionManager } from "@/src/lib/supabase/subscription-manager";
-import { getOptimizedConversations, getOptimizedMessages, clearCache } from "@/src/lib/supabase/query-optimizer";
-import { connectionMonitor } from "@/src/lib/supabase/connection-monitor";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface User {
   id: string;
