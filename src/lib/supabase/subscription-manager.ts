@@ -2,6 +2,74 @@ import { supabase } from './client';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import type { Message, Conversation } from '../../../types/chat';
 
+// Type interfaces for Supabase query results
+interface SupabaseMessage {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  content: string;
+  message_type?: string;
+  created_at: string;
+  edited_at?: string;
+  is_edited?: boolean;
+  sender: {
+    id: string;
+    username: string;
+    avatar_url?: string;
+  } | {
+    id: string;
+    username: string;
+    avatar_url?: string;
+  }[];
+}
+
+interface SupabaseConversation {
+  id: string;
+  type: 'direct' | 'group';
+  name?: string;
+  created_at: string;
+  updated_at: string;
+  participants: {
+    user_id: string;
+    joined_at: string;
+    last_read_at?: string;
+    user: {
+      id: string;
+      username: string;
+      avatar_url?: string;
+    } | {
+      id: string;
+      username: string;
+      avatar_url?: string;
+    }[];
+  }[];
+  last_message?: {
+    content: string;
+    created_at: string;
+    sender: {
+      id: string;
+      username: string;
+      avatar_url?: string;
+    } | {
+      id: string;
+      username: string;
+      avatar_url?: string;
+    }[];
+  } | {
+    content: string;
+    created_at: string;
+    sender: {
+      id: string;
+      username: string;
+      avatar_url?: string;
+    } | {
+      id: string;
+      username: string;
+      avatar_url?: string;
+    }[];
+  }[];
+}
+
 class SubscriptionManager {
   private static instance: SubscriptionManager;
   private subscriptions: Map<string, RealtimeChannel> = new Map();
@@ -49,23 +117,24 @@ class SubscriptionManager {
               .single();
 
             if (!error && data) {
+              const messageData = data as SupabaseMessage;
               // Transform data to match Message interface
-              const messageData: Message = {
-                id: data.id,
-                conversation_id: data.conversation_id,
-                sender_id: data.sender_id,
-                content: data.content,
-                message_type: data.message_type || 'text',
-                created_at: data.created_at,
-                edited_at: data.edited_at,
-                is_edited: data.is_edited || false,
-                sender: Array.isArray(data.sender) ? data.sender[0] : data.sender
+              const transformedMessage: Message = {
+                id: messageData.id,
+                conversation_id: messageData.conversation_id,
+                sender_id: messageData.sender_id,
+                content: messageData.content,
+                message_type: (messageData.message_type as 'text' | 'image' | 'file') || 'text',
+                created_at: messageData.created_at,
+                edited_at: messageData.edited_at,
+                is_edited: messageData.is_edited || false,
+                sender: Array.isArray(messageData.sender) ? messageData.sender[0] : messageData.sender
               };
 
               // Notify all message subscribers
               const callbacks = this.messageSubscribers.get(channelKey);
               if (callbacks) {
-                callbacks.forEach(cb => cb(messageData));
+                callbacks.forEach(cb => cb(transformedMessage));
               }
             }
           }
@@ -126,34 +195,37 @@ class SubscriptionManager {
               .single();
 
             if (!error && data) {
+              const conversationData = data as SupabaseConversation;
               // Transform data to match Conversation interface
-              const conversationData: Conversation = {
-                id: data.id,
-                type: data.type,
-                name: data.name,
-                created_at: data.created_at,
-                updated_at: data.updated_at,
-                participants: (data.participants || []).map((participant: any) => ({
+              const transformedConversation: Conversation = {
+                id: conversationData.id,
+                type: conversationData.type,
+                name: conversationData.name,
+                created_at: conversationData.created_at,
+                updated_at: conversationData.updated_at,
+                participants: (conversationData.participants || []).map((participant) => ({
                   user_id: participant.user_id,
                   joined_at: participant.joined_at,
                   last_read_at: participant.last_read_at,
                   user: Array.isArray(participant.user) ? participant.user[0] : participant.user
                 })),
-                last_message: data.last_message ? {
-                  content: Array.isArray(data.last_message) ? (data.last_message[0] as any).content : (data.last_message as any).content,
-                  created_at: Array.isArray(data.last_message) ? (data.last_message[0] as any).created_at : (data.last_message as any).created_at,
-                  sender: {
-                    username: Array.isArray(data.last_message) ? 
-                      ((data.last_message[0] as any).sender?.username || '') : 
-                      ((data.last_message as any).sender?.username || '')
-                  }
-                } : undefined
+                last_message: conversationData.last_message ? (() => {
+                  const lastMsg = Array.isArray(conversationData.last_message) ? conversationData.last_message[0] : conversationData.last_message;
+                  const sender = Array.isArray(lastMsg.sender) ? lastMsg.sender[0] : lastMsg.sender;
+                  return {
+                    content: lastMsg.content,
+                    created_at: lastMsg.created_at,
+                    sender: {
+                      username: sender?.username || ''
+                    }
+                  };
+                })() : undefined
               };
 
               // Notify all conversation subscribers
               const callbacks = this.conversationSubscribers.get(channelKey);
               if (callbacks) {
-                callbacks.forEach(cb => cb(conversationData));
+                callbacks.forEach(cb => cb(transformedConversation));
               }
             }
           }
