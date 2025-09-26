@@ -1,6 +1,11 @@
-import { supabase } from './client';
 import { subscriptionManager } from './subscription-manager';
 import { getCacheStats } from './query-optimizer';
+
+interface CacheStats {
+  size: number;
+  keys: string[];
+  totalMemory: number;
+}
 
 interface ConnectionStats {
   activeSubscriptions: number;
@@ -47,7 +52,7 @@ class ConnectionMonitor {
   /**
    * Get current connection statistics
    */
-  getStats(): ConnectionStats & { cacheStats: any } {
+  getStats(): ConnectionStats & { cacheStats: CacheStats } {
     return {
       ...this.stats,
       activeSubscriptions: subscriptionManager.getActiveSubscriptionCount(),

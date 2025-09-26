@@ -1,22 +1,30 @@
 import { supabase } from './client';
+import type { PostgrestError } from '@supabase/supabase-js';
+
+// Interface for cached data
+interface CachedData<T = unknown> {
+  data: T | null;
+  timestamp: number;
+  ttl: number;
+}
 
 // Cache for frequently accessed data
-const queryCache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+const queryCache = new Map<string, CachedData<unknown>>();
 
 /**
  * Cached query wrapper to reduce redundant database calls
  */
 export async function cachedQuery<T>(
   cacheKey: string,
-  queryFn: () => Promise<{ data: T | null; error: any }>,
+  queryFn: () => Promise<{ data: T | null; error: PostgrestError | null }>,
   ttlMs: number = 30000 // 30 seconds default
-): Promise<{ data: T | null; error: any }> {
+): Promise<{ data: T | null; error: PostgrestError | null }> {
   const cached = queryCache.get(cacheKey);
   const now = Date.now();
 
   // Return cached data if still valid
   if (cached && (now - cached.timestamp) < cached.ttl) {
-    return { data: cached.data, error: null };
+    return { data: cached.data as T | null, error: null };
   }
 
   // Execute query

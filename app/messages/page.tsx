@@ -50,6 +50,21 @@ interface PendingFriendRequest {
   created_at: string;
 }
 
+// Database response types
+interface FriendConversationData {
+  id: string;
+  user1_id: string;
+  user2_id: string;
+  created_at: string;
+  last_message?: unknown[];
+}
+
+interface FriendData {
+  friend_id: string;
+  username: string;
+  avatar_url?: string | null;
+}
+
 function MessagesContent() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -136,9 +151,8 @@ function MessagesContent() {
       // Process friend conversations
       if (friendConversationsData) {
         // Get friend details for better participant information
-        const friendIds = friendConversationsData.map((conv: any) => {
-          const friendConv = conv as { user1_id: string; user2_id: string };
-          return friendConv.user1_id === currentUser.id ? friendConv.user2_id : friendConv.user1_id;
+        const friendIds = friendConversationsData.map((conv: FriendConversationData) => {
+          return conv.user1_id === currentUser.id ? conv.user2_id : conv.user1_id;
         });
 
         // Fetch friend details
@@ -148,8 +162,8 @@ function MessagesContent() {
           .in("friend_id", friendIds)
           .eq("user_id", currentUser.id);
 
-        const friendMap = new Map();
-        friendsData?.forEach((friend: any) => {
+        const friendMap = new Map<string, FriendData>();
+        friendsData?.forEach((friend: FriendData) => {
           friendMap.set(friend.friend_id, friend);
         });
 
