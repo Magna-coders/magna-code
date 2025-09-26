@@ -1020,7 +1020,7 @@ function MessagesContent() {
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ delay: 0.1 }}
                   >
-                    <p>No friends found matching "{friendSearchQuery}"</p>
+                    <p>No friends found matching &quot;{friendSearchQuery}&quot;</p>
                     <p className="text-xs mt-1">Try a different search term</p>
                   </motion.div>
                 )}
