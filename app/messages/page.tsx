@@ -1016,7 +1016,10 @@ function MessagesContent() {
   const playNewMessageSound = () => {
     try {
       // Create a simple beep sound using Web Audio API
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      interface WindowWithWebkit extends Window {
+        webkitAudioContext?: typeof AudioContext;
+      }
+      const audioContext = new (window.AudioContext || (window as WindowWithWebkit).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
