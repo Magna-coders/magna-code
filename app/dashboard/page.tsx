@@ -55,6 +55,7 @@ export default function HomeDashboard() {
   const [loading, setLoading] = useState(true);
   const [connectionRequests, setConnectionRequests] = useState<ConnectionRequest[]>([]);
   const router = useRouter();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     fetchUserData();
@@ -392,74 +393,145 @@ export default function HomeDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-black relative">
+      {/* Global decorative background */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[120vw] h-[60vh] rounded-full blur-3xl opacity-20 bg-gradient-to-r from-[#E70008] via-[#FF9940] to-[#F9E4AD]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_rgba(231,0,8,0.08)_0%,_transparent_60%)]" />
+      </div>
       {/* Header */}
-      <header className="border-b border-[#E70008]/20">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold font-mono text-[#E70008]">
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-black/40 border-b border-[#E70008]/20">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center space-x-4 sm:space-x-8">
+              <h1 className="text-xl sm:text-2xl font-bold font-mono text-[#E70008] tracking-tight">
                 Magna Coders
               </h1>
-              <nav className="hidden md:flex items-center space-x-6">
-                <a href="/dashboard" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
-                  Dashboard
-                </a>
-                <a href="/my-projects" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
-                  My Projects
-                </a>
-                <a href="/members" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
-                  Members
-                </a>
-                <a href="/projects" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
-                  All Projects
-                </a>
-                <a href="/profile" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
-                  Profile
-                </a>
-                <a href="/settings" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">
-                  Settings
-                </a>
+              <nav className="hidden md:flex items-center space-x-4 lg:space-x-6">
+                <a href="/dashboard" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">Dashboard</a>
+                <a href="/my-projects" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">My Projects</a>
+                <a href="/members" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">Members</a>
+                <a href="/projects" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">All Projects</a>
+                <a href="/profile" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">Profile</a>
+                <a href="/settings" className="text-[#F9E4AD] font-mono hover:text-[#FF9940] transition-colors">Settings</a>
               </nav>
             </div>
-            <button 
-              onClick={handleLogout}
-              className="px-4 py-2 bg-[#E70008] text-black font-mono font-bold rounded-md hover:bg-[#FF9940] transition-colors">
-              Logout
-            </button>
+            <div className="hidden lg:flex flex-1 max-w-md">
+              <div className="relative w-full">
+                <input 
+                  type="text"
+                  placeholder="Search projects or members..."
+                  className="w-full pl-10 pr-4 py-2 bg-black/50 border border-[#E70008]/50 rounded-full text-[#F9E4AD] placeholder-[#F9E4AD]/60 focus:border-[#FF9940] focus:outline-none font-mono text-sm"
+                />
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#F9E4AD]/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              {user?.avatar_url && (
+                <img 
+                  src={user.avatar_url} 
+                  alt="Profile" 
+                  className="w-8 h-8 rounded-full border border-[#E70008]/50 hover:border-[#FF9940] transition-colors cursor-pointer"
+                  onClick={() => router.push('/profile')}
+                />
+              )}
+              <button 
+                onClick={handleLogout}
+                className="hidden sm:inline-flex px-4 py-2 bg-[#E70008] text-black font-mono font-bold rounded-md hover:bg-[#FF9940] transition-colors">
+                Logout
+              </button>
+              <button
+                aria-label="Toggle Menu"
+                className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-md border border-[#E70008]/40 text-[#F9E4AD] hover:border-[#FF9940]"
+                onClick={() => setMobileNavOpen(v => !v)}
+              >
+                <span className="sr-only">Open navigation</span>
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+              </button>
+            </div>
           </div>
         </div>
+        {mobileNavOpen && (
+          <div className="md:hidden border-t border-[#E70008]/20 bg-black/70 backdrop-blur-sm">
+            <div className="container mx-auto px-4 py-3 grid gap-2">
+              <a href="/dashboard" className="text-[#F9E4AD] font-mono py-2 rounded hover:bg-[#E70008]/10">Dashboard</a>
+              <a href="/my-projects" className="text-[#F9E4AD] font-mono py-2 rounded hover:bg-[#E70008]/10">My Projects</a>
+              <a href="/members" className="text-[#F9E4AD] font-mono py-2 rounded hover:bg-[#E70008]/10">Members</a>
+              <a href="/projects" className="text-[#F9E4AD] font-mono py-2 rounded hover:bg-[#E70008]/10">All Projects</a>
+              <a href="/profile" className="text-[#F9E4AD] font-mono py-2 rounded hover:bg-[#E70008]/10">Profile</a>
+              <a href="/settings" className="text-[#F9E4AD] font-mono py-2 rounded hover:bg-[#E70008]/10">Settings</a>
+              <button 
+                onClick={handleLogout}
+                className="w-full mt-2 px-4 py-2 bg-[#E70008] text-black font-mono font-bold rounded-md hover:bg-[#FF9940] transition-colors">
+                Logout
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       <main className="container mx-auto px-4 py-8">
         {/* Welcome Section */}
-        <motion.section className="mb-8"
-          initial={{ opacity: 0, y: -30 }}
+        <motion.section 
+          className="relative mb-8"
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <motion.div className="bg-gradient-to-r from-[#E70008]/10 to-[#FF9940]/10 rounded-lg p-6 mb-4"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7 }}
-          >
+          <div className="bg-[#E70008]/10 border border-[#E70008]/30 rounded-2xl p-8">
             {loading ? (
               <div className="animate-pulse">
                 <div className="h-8 bg-[#E70008]/20 rounded w-64 mb-2"></div>
                 <div className="h-4 bg-[#E70008]/20 rounded w-48"></div>
               </div>
             ) : user ? (
-              <>
-                <h2 className="text-3xl font-bold font-mono text-[#F9E4AD] mb-2">
-                  Welcome back, {user.username}
-                </h2>
-                <p className="text-[#F9E4AD]/80 font-mono">
-                  Ready to collaborate and build something amazing?
-                </p>
-              </>
+              <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8">
+                <div className="flex items-center gap-6">
+                  <div className="relative">
+                    <img 
+                      src={user.avatar_url || "/placeholder-avatar.jpg"} 
+                      alt="Profile" 
+                      className="w-24 h-24 rounded-full border-2 border-[#E70008]/50"
+                    />
+                  </div>
+                  <div>
+                    <h2 className="text-4xl font-bold text-[#F9E4AD] mb-2">
+                      Welcome back, {user.username}!
+                    </h2>
+                    <p className="text-[#F9E4AD]/80 text-lg">
+                      Ready to build something amazing?
+                    </p>
+                    <motion.button 
+                      className="mt-4 px-6 py-3 bg-[#E70008] text-white font-bold rounded-lg hover:bg-[#E70008]/90 transition-colors duration-300"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => router.push('/profile/update')}
+                    >
+                      Edit Profile
+                    </motion.button>
+                  </div>
+                </div>
+                
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+                  <div className="bg-black/30 border border-white/20 rounded-xl p-6">
+                    <h3 className="text-[#FF9940] font-bold text-2xl mb-2">{user.projectsJoined || 0}</h3>
+                    <p className="text-[#F9E4AD]/80 font-medium">Active Projects</p>
+                  </div>
+                  <div className="bg-black/30 border border-white/20 rounded-xl p-6">
+                    <h3 className="text-[#FF9940] font-bold text-2xl mb-2">{user.connections || 0}</h3>
+                    <p className="text-[#F9E4AD]/80 font-medium">Connections</p>
+                  </div>
+                  <div className="bg-black/30 border border-white/20 rounded-xl p-6">
+                    <h3 className="text-[#FF9940] font-bold text-2xl mb-2">{user.skills?.length || 0}</h3>
+                    <p className="text-[#F9E4AD]/80 font-medium">Skills</p>
+                  </div>
+                </div>
+              </div>
             ) : (
               <>
-                <h2 className="text-3xl font-bold font-mono text-[#F9E4AD] mb-2">
+                <h2 className="text-3xl sm:text-4xl font-bold font-mono bg-clip-text text-transparent bg-gradient-to-r from-[#F9E4AD] via-[#FF9940] to-[#E70008] mb-2">
                   Welcome back
                 </h2>
                 <p className="text-[#F9E4AD]/80 font-mono">
@@ -467,22 +539,24 @@ export default function HomeDashboard() {
                 </p>
               </>
             )}
-            {user && user.profileComplete < 100 && (
-              <div className="mt-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-mono text-[#F9E4AD]">
-                    Profile Complete: {user?.profileComplete || 0}%
-                  </span>
+            
+            {user && (
+              <div className="mt-8">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-[#F9E4AD]/80 font-medium text-lg">Profile Completion</span>
+                  <span className="text-[#FF9940] font-bold text-xl">{user.profileComplete}%</span>
                 </div>
-                <div className="w-full bg-[#1a1a1a] rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(user?.profileComplete || 0)}`}
-                    style={{ width: `${user?.profileComplete || 0}%` }}
-                  ></div>
+                <div className="w-full bg-black/40 rounded-full h-3 border border-white/20">
+                  <motion.div 
+                    className="h-full bg-[#E70008] rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${user.profileComplete}%` }}
+                    transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }}
+                  />
                 </div>
               </div>
             )}
-          </motion.div>
+          </div>
         </motion.section>
 
         {/* Quick Actions */}
@@ -491,11 +565,11 @@ export default function HomeDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <h3 className="text-2xl font-bold font-mono text-[#F9E4AD] mb-4">
+          <h3 className="text-3xl font-bold text-[#F9E4AD] mb-6">
             Quick Actions
           </h3>
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
             initial="hidden"
             animate="visible"
             variants={{
@@ -511,27 +585,29 @@ export default function HomeDashboard() {
               <motion.button
                 key={index}
                 onClick={action.action}
-                className="block w-full text-left p-6 rounded-lg border border-[#E70008]/30 hover:border-[#FF9940] transition-all duration-300 hover:shadow-lg hover:shadow-[#E70008]/20 relative"
-                whileHover={{ scale: 1.04, boxShadow: "0 4px 24px #E7000855" }}
+                className="bg-[#E70008]/10 border border-[#E70008]/30 rounded-2xl p-8 hover:bg-[#E70008]/20 transition-all duration-300"
+                whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.1 * index }}
               >
                 {action.badge && (
-                  <div className="absolute top-2 right-2 bg-[#E70008] text-white text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center">
+                  <div className="absolute top-3 right-3 bg-[#E70008] text-white text-xs font-bold px-3 py-1 rounded-full min-w-[24px] text-center shadow-lg">
                     {action.badge}
                   </div>
                 )}
-                <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center text-2xl mb-3`}>
-                  {action.icon}
+                <div className="text-center">
+                  <div className={`w-16 h-16 mx-auto mb-4 ${action.color} rounded-xl flex items-center justify-center text-2xl`}>
+                    {action.icon}
+                  </div>
+                  <h4 className="font-bold text-[#F9E4AD] text-xl mb-2">
+                    {action.title}
+                  </h4>
+                  <p className="text-sm text-[#F9E4AD]/70">
+                    {action.description}
+                  </p>
                 </div>
-                <h4 className="text-lg font-bold font-mono text-[#F9E4AD] mb-2">
-                  {action.title}
-                </h4>
-                <p className="text-sm font-mono text-[#F9E4AD]/80">
-                  {action.description}
-                </p>
               </motion.button>
             ))}
           </motion.div>
@@ -540,20 +616,27 @@ export default function HomeDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Community Feed */}
           <section className="lg:col-span-2">
-            <h3 className="text-2xl font-bold font-mono text-[#F9E4AD] mb-4">
+            <h3 className="text-3xl font-bold text-[#F9E4AD] mb-6">
               Community Feed
             </h3>
-            <div className="space-y-4">
-              {communityUpdates.map((update) => (
-                <div key={update.id} className="bg-[#E70008]/5 border border-[#E70008]/20 rounded-lg p-4">
+            <div className="space-y-6">
+              {communityUpdates.map((update, index) => (
+                <motion.div 
+                  key={update.id} 
+                  className="bg-black/30 border border-white/20 rounded-2xl p-6 hover:bg-black/40 transition-all duration-300"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  whileHover={{ scale: 1.01 }}
+                >
                   <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-mono text-[#F9E4AD] mb-1">
+                    <div className="flex-1">
+                      <p className="font-medium text-[#F9E4AD]/90 mb-3 leading-relaxed text-lg">
                         {update.message}
                       </p>
                       {update.author && (
                         <div className="flex items-center justify-between">
-                          <p className="text-xs font-mono text-[#FF9940]">
+                          <p className="text-sm font-semibold text-[#FF9940] tracking-wide">
                             by {update.author}
                           </p>
                           <ChatButton
@@ -566,111 +649,177 @@ export default function HomeDashboard() {
                         </div>
                       )}
                     </div>
-                    <span className="text-xs font-mono text-[#F9E4AD]/60">
+                    <span className="text-sm font-medium text-[#F9E4AD]/60 ml-4 flex-shrink-0">
                       {update.timestamp}
                     </span>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </section>
 
           {/* Your Stats */}
           <section>
-            <h3 className="text-2xl font-bold font-mono text-[#F9E4AD] mb-4">
+            <h3 className="text-3xl font-bold text-[#F9E4AD] mb-6">
               Your Stats
             </h3>
-            <div className="space-y-4">
-              <div className="bg-[#E70008]/5 border border-[#E70008]/20 rounded-lg p-4">
-                <h4 className="text-lg font-bold font-mono text-[#F9E4AD] mb-2">
-                  Skills
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                    {user && user.skills.length > 0 ? (
-                      user.skills.map((skill, index) => (
-                        <span key={index} className="px-3 py-1 bg-[#FF9940]/20 text-[#F9E4AD] font-mono text-xs rounded-full border border-[#FF9940]/30">
-                          {skill}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="px-3 py-1 bg-[#1a1a1a] text-[#F9E4AD]/50 font-mono text-xs rounded-full">
-                        No skills added yet
-                      </span>
-                    )}
-                  </div>
-              </div>
+            <div className="space-y-6">
+              <motion.div 
+                className="bg-[#E70008]/10 border border-[#E70008]/30 rounded-2xl p-8"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                whileHover={{ scale: 1.01 }}
+              >
+                <h4 className="font-bold text-[#F9E4AD] text-2xl mb-6">Skills</h4>
+                <div className="flex flex-wrap gap-3">
+                  {user && user.skills.length > 0 ? (
+                    user.skills.map((skill, index) => (
+                      <motion.span
+                        key={index}
+                        className="px-4 py-2 bg-[#E70008] text-white rounded-full text-sm font-bold hover:bg-[#E70008]/90 transition-colors duration-300"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3, delay: 0.1 * index }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {skill}
+                      </motion.span>
+                    ))
+                  ) : (
+                    <span className="px-4 py-2 bg-black/40 text-[#F9E4AD]/50 font-bold text-sm rounded-full border border-white/20">
+                      No skills added yet
+                    </span>
+                  )}
+                </div>
+              </motion.div>
 
-              <div className="bg-[#E70008]/5 border border-[#E70008]/20 rounded-lg p-4">
-                <h4 className="text-lg font-bold font-mono text-[#F9E4AD] mb-2">
-                  Activity
-                </h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="font-mono text-[#F9E4AD]">Projects Joined</span>
-                    <span className="font-mono text-[#FF9940] font-bold">{user?.projectsJoined || 0}</span>
+              <motion.div 
+                className="bg-[#FF9940]/10 border border-[#FF9940]/30 rounded-2xl p-8"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+                whileHover={{ scale: 1.01 }}
+              >
+                <h4 className="font-bold text-[#F9E4AD] text-2xl mb-6">Activity</h4>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#F9E4AD]/80 font-medium">Projects Joined</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-[#E70008] rounded-full flex items-center justify-center text-white font-bold text-sm">{user?.projectsJoined || 0}</div>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="font-mono text-[#F9E4AD]">Connections</span>
-                    <span className="font-mono text-[#FF9940] font-bold">{user?.connections || 0}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#F9E4AD]/80 font-medium">Connections</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-[#FF9940] rounded-full flex items-center justify-center text-black font-bold text-sm">{user?.connections || 0}</div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </section>
         </div>
 
         {/* Chat Section */}
         <section className="mt-8">
-          <h3 className="text-2xl font-bold font-mono text-[#F9E4AD] mb-4">
+          <h3 className="text-3xl font-bold text-[#F9E4AD] mb-6">
             Quick Chat
           </h3>
-          <div className="bg-[#E70008]/5 border border-[#E70008]/20 rounded-lg p-6">
-            <p className="text-[#F9E4AD] font-mono mb-4">
-              Connect with other members instantly. Click on any member to start a conversation.
+          <div className="bg-[#E70008]/10 border border-[#E70008]/30 rounded-2xl p-8">
+            <p className="text-[#F9E4AD]/90 font-medium text-lg mb-6">
+              Connect with other members instantly. Click on any member to start a conversation. ✨
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="bg-black border border-[#E70008]/30 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-mono text-[#F9E4AD] font-semibold">John Doe</h4>
-                    <p className="text-xs text-[#F9E4AD]/60">Full Stack Developer</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <motion.div 
+                className="bg-black/30 border border-white/20 rounded-xl p-5 hover:bg-black/40 transition-all duration-300 cursor-pointer"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="relative flex-shrink-0">
+                    <img src="/placeholder-avatar.jpg" alt="John Doe" className="w-12 h-12 rounded-full border-2 border-white/20" />
+                    <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-black"></span>
                   </div>
-                  <ChatButton
-                    targetUserId="john-doe-id"
-                    targetUsername="John Doe"
-                    size="small"
-                    showLabel={true}
-                  />
-                </div>
-              </div>
-              <div className="bg-black border border-[#E70008]/30 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-mono text-[#F9E4AD] font-semibold">Sarah Chen</h4>
-                    <p className="text-xs text-[#F9E4AD]/60">UI/UX Designer</p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-baseline mb-1">
+                      <h4 className="font-bold text-[#F9E4AD] text-lg">John Doe</h4>
+                      <span className="text-sm text-[#F9E4AD]/60">2h ago</span>
+                    </div>
+                    <p className="text-sm text-[#FF9940] font-semibold mb-2">Full Stack Developer</p>
+                    <p className="text-sm text-[#F9E4AD]/80 truncate">Hey, about the project idea...</p>
                   </div>
-                  <ChatButton
-                    targetUserId="sarah-chen-id"
-                    targetUsername="Sarah Chen"
-                    size="small"
-                    showLabel={true}
-                  />
-                </div>
-              </div>
-              <div className="bg-black border border-[#E70008]/30 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-mono text-[#F9E4AD] font-semibold">Mike Johnson</h4>
-                    <p className="text-xs text-[#F9E4AD]/60">DevOps Engineer</p>
+                  <div className="flex flex-col items-center gap-2">
+                    <ChatButton
+                      targetUserId="john-doe-id"
+                      targetUsername="John Doe"
+                      size="small"
+                      showLabel={false}
+                      className="self-center"
+                    />
+                    <span className="bg-[#E70008] text-white text-xs font-bold px-2 py-1 rounded-full">3</span>
                   </div>
-                  <ChatButton
-                    targetUserId="mike-johnson-id"
-                    targetUsername="Mike Johnson"
-                    size="small"
-                    showLabel={true}
-                  />
                 </div>
-              </div>
+              </motion.div>
+              <motion.div 
+                className="bg-black/30 border border-white/20 rounded-xl p-5 hover:bg-black/40 transition-all duration-300 cursor-pointer"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="relative flex-shrink-0">
+                    <img src="/placeholder-avatar.jpg" alt="Sarah Chen" className="w-12 h-12 rounded-full border-2 border-white/20" />
+                    <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-black"></span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-baseline mb-1">
+                      <h4 className="font-bold text-[#F9E4AD] text-lg">Sarah Chen</h4>
+                      <span className="text-sm text-[#F9E4AD]/60">1d ago</span>
+                    </div>
+                    <p className="text-sm text-[#FF9940] font-semibold mb-2">UI/UX Designer</p>
+                    <p className="text-sm text-[#F9E4AD]/80 truncate">Let's discuss the design...</p>
+                  </div>
+                  <div className="flex flex-col items-center gap-2">
+                    <ChatButton
+                      targetUserId="sarah-chen-id"
+                      targetUsername="Sarah Chen"
+                      size="small"
+                      showLabel={false}
+                      className="self-center"
+                    />
+                  </div>
+                </div>
+              </motion.div>
+              <motion.div 
+                className="bg-black/30 border border-white/20 rounded-xl p-5 hover:bg-black/40 transition-all duration-300 cursor-pointer"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="relative flex-shrink-0">
+                    <img src="/placeholder-avatar.jpg" alt="Mike Johnson" className="w-12 h-12 rounded-full border-2 border-white/20" />
+                    <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-gray-500 rounded-full border-2 border-black"></span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-baseline mb-1">
+                      <h4 className="font-bold text-[#F9E4AD] text-lg">Mike Johnson</h4>
+                      <span className="text-sm text-[#F9E4AD]/60">3d ago</span>
+                    </div>
+                    <p className="text-sm text-[#FF9940] font-semibold mb-2">DevOps Engineer</p>
+                    <p className="text-sm text-[#F9E4AD]/80 truncate">Deployment is ready...</p>
+                  </div>
+                  <div className="flex flex-col items-center gap-2">
+                    <ChatButton
+                      targetUserId="mike-johnson-id"
+                      targetUsername="Mike Johnson"
+                      size="small"
+                      showLabel={false}
+                      className="self-center"
+                    />
+                  </div>
+                </div>
+              </motion.div>
             </div>
           </div>
         </section>
