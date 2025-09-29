@@ -1261,9 +1261,7 @@ function MessagesContent() {
                                 ? 'text-[#FF9940] font-semibold' 
                                 : 'text-[#FF9940]/70'
                             }`}>
-                              {hasUnreadMessages && conv.last_message.sender_id !== currentUser?.id && (
-                                <span className="inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#FF9940] rounded-full mr-1 sm:mr-2 animate-pulse"></span>
-                              )}
+
                               {conv.last_message.content}
                             </span>
                           )}
@@ -1292,17 +1290,7 @@ function MessagesContent() {
                               })()}
                             </span>
                           )}
-                          {(conv.unread_count || unreadMessages[conv.id]) && (conv.unread_count || unreadMessages[conv.id]) > 0 && (
-                            <motion.div
-                              className="bg-[#FF9940] text-black text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5"
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                            >
-                              {Math.min(conv.unread_count || unreadMessages[conv.id] || 0, 99)}
-                              {(conv.unread_count || unreadMessages[conv.id] || 0) > 99 && '+'}
-                            </motion.div>
-                          )}
+
                         </div>
                       </div>
                     </motion.div>
