@@ -778,7 +778,7 @@ export default function HomeDashboard() {
                       <span className="text-sm text-[#F9E4AD]/60">1d ago</span>
                     </div>
                     <p className="text-sm text-[#FF9940] font-semibold mb-2">UI/UX Designer</p>
-                    <p className="text-sm text-[#F9E4AD]/80 truncate">Let's discuss the design...</p>
+                    <p className="text-sm text-[#F9E4AD]/80 truncate">Let&apos;s discuss the design...</p>
                   </div>
                   <div className="flex flex-col items-center gap-2">
                     <ChatButton
