@@ -1762,7 +1762,7 @@ function MessagesContent() {
               {/* Messages */}
               <motion.div 
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-3 lg:p-4 space-y-2 sm:space-y-3 lg:space-y-4 scroll-smooth"
+                className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-3 lg:p-4 pb-20 sm:pb-24 lg:pb-28 space-y-2 sm:space-y-3 lg:space-y-4 scroll-smooth"
                 style={{ 
                   scrollbarWidth: 'thin',
                   scrollbarColor: '#FF9940 #111',
@@ -1890,18 +1890,18 @@ function MessagesContent() {
               {/* Input */}
               <motion.form 
                 onSubmit={sendMessage} 
-                className="bg-[#111] border-t border-[#333] p-3 sm:p-4 lg:p-5 safe-area-inset-bottom"
+                className="bg-[#111] border-t border-[#333] p-2 sm:p-3 lg:p-3 safe-area-inset-bottom fixed bottom-0 left-0 right-0 z-50"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
               >
-                <div className="flex items-end space-x-2 sm:space-x-3 lg:space-x-4">
+                <div className="flex items-end space-x-2 sm:space-x-3 lg:space-x-3">
                   <motion.input
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Type a message..."
-                    className="flex-1 bg-[#222] text-[#F9E4AD] rounded-2xl sm:rounded-3xl px-4 sm:px-5 lg:px-6 py-3 sm:py-4 lg:py-5 text-sm sm:text-base lg:text-lg focus:outline-none focus:ring-2 focus:ring-[#FF9940] focus:bg-[#333] transition-all duration-200 min-h-[48px] sm:min-h-[52px] lg:min-h-[56px] border border-[#333] hover:border-[#444]"
+                    className="flex-1 bg-[#222] text-[#F9E4AD] rounded-xl sm:rounded-2xl px-3 sm:px-4 lg:px-4 py-2 sm:py-3 lg:py-3 text-sm sm:text-base lg:text-base focus:outline-none focus:ring-2 focus:ring-[#FF9940] focus:bg-[#333] transition-all duration-200 min-h-[40px] sm:min-h-[44px] lg:min-h-[44px] border border-[#333] hover:border-[#444]"
                     disabled={sending}
                     whileFocus={{ scale: 1.01 }}
                     transition={{ type: "spring", stiffness: 300 }}
@@ -1909,7 +1909,7 @@ function MessagesContent() {
                   <motion.button
                     type="submit"
                     disabled={!newMessage.trim() || sending}
-                    className="bg-gradient-to-r from-[#E70008] to-[#FF9940] hover:from-[#FF9940] hover:to-[#E70008] text-white px-4 sm:px-5 lg:px-6 py-3 sm:py-4 lg:py-5 rounded-2xl sm:rounded-3xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base lg:text-lg min-h-[48px] sm:min-h-[52px] lg:min-h-[56px] min-w-[48px] sm:min-w-[52px] lg:min-w-[80px] flex items-center justify-center shadow-lg"
+                    className="bg-gradient-to-r from-[#E70008] to-[#FF9940] hover:from-[#FF9940] hover:to-[#E70008] text-white px-3 sm:px-4 lg:px-4 py-2 sm:py-3 lg:py-3 rounded-xl sm:rounded-2xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base lg:text-base min-h-[40px] sm:min-h-[44px] lg:min-h-[44px] min-w-[40px] sm:min-w-[44px] lg:min-w-[70px] flex items-center justify-center shadow-lg"
                     whileHover={{ scale: 1.05, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                   >
