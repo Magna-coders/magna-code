@@ -58,17 +58,6 @@ interface FriendConversationData {
   user1_id: string;
   user2_id: string;
   created_at: string;
-  last_message: Array<{
-    id: string;
-    sender_id: string;
-    content: string;
-    created_at: string;
-    sender: Array<{
-      id: string;
-      username: string;
-      avatar_url: string | null;
-    }>;
-  }>;
 }
 
 interface FriendData {
@@ -159,8 +148,7 @@ function MessagesContent() {
           id,
           user1_id,
           user2_id,
-          created_at,
-          last_message:messages(id, sender_id, content, created_at, sender:users(id, username, avatar_url))
+          created_at
         `)
         .or(`user1_id.eq.${currentUser.id},user2_id.eq.${currentUser.id}`)
         .order("id", { ascending: false });
@@ -199,35 +187,53 @@ function MessagesContent() {
           friendMap.set(friend.friend_id, friend);
         });
 
-        const friendConversations = (friendConversationsData as unknown[]).map((conv: unknown) => {
-          const friendConv = conv as {
-            id: string;
-            user1_id: string;
-            user2_id: string;
-            created_at: string;
-            last_message?: unknown[];
-          };
+        const friendConversations = await Promise.all(
+          (friendConversationsData as unknown[]).map(async (conv: unknown) => {
+            const friendConv = conv as {
+              id: string;
+              user1_id: string;
+              user2_id: string;
+              created_at: string;
+            };
 
-          // Get the other user's ID
-          const otherUserId = friendConv.user1_id === currentUser.id ? friendConv.user2_id : friendConv.user1_id;
-          const friendInfo = friendMap.get(otherUserId) || { friend_id: otherUserId, username: 'Friend', avatar_url: null };
+            // Get the other user's ID
+            const otherUserId = friendConv.user1_id === currentUser.id ? friendConv.user2_id : friendConv.user1_id;
+            const friendInfo = friendMap.get(otherUserId) || { friend_id: otherUserId, username: 'Friend', avatar_url: null };
 
-          return {
-            id: friendConv.id,
-            type: 'direct' as const,
-            participants: [
-              { user_id: currentUser.id, users: currentUser },
-              { user_id: otherUserId, users: { id: otherUserId, username: friendInfo.username, avatar_url: friendInfo.avatar_url } }
-            ],
-            last_message: friendConv.last_message?.[0] ? {
-              id: (friendConv.last_message[0] as { id: string }).id,
-              sender_id: (friendConv.last_message[0] as { sender_id: string }).sender_id,
-              content: (friendConv.last_message[0] as { content: string }).content,
-              created_at: (friendConv.last_message[0] as { created_at: string }).created_at,
-              sender: ((friendConv.last_message[0] as { sender: unknown[] }).sender?.[0] as User | undefined)
-            } : undefined
-          };
-        });
+            // Fetch the latest message for this conversation
+            const { data: latestMessageData } = await supabase
+              .from("messages")
+              .select(`
+                id,
+                sender_id,
+                content,
+                created_at,
+                sender:users(id, username, avatar_url)
+              `)
+              .eq("conversation_id", friendConv.id)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .single();
+
+            return {
+              id: friendConv.id,
+              type: 'direct' as const,
+              participants: [
+                { user_id: currentUser.id, users: currentUser },
+                { user_id: otherUserId, users: { id: otherUserId, username: friendInfo.username, avatar_url: friendInfo.avatar_url } }
+              ],
+              last_message: latestMessageData ? {
+                id: latestMessageData.id,
+                sender_id: latestMessageData.sender_id,
+                content: latestMessageData.content,
+                created_at: latestMessageData.created_at,
+                sender: Array.isArray(latestMessageData.sender) 
+                  ? latestMessageData.sender[0] as User 
+                  : latestMessageData.sender as User
+              } : undefined
+            };
+          })
+        );
         transformedConversations.push(...friendConversations);
       }
 
