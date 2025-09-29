@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
@@ -86,6 +86,8 @@ function MessagesContent() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [loadingMoreMessages, setLoadingMoreMessages] = useState(false);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [openedChats, setOpenedChats] = useState<Set<string>>(new Set());
 
   // Reset pagination when search query changes
   useEffect(() => {
@@ -134,6 +136,28 @@ function MessagesContent() {
 
     fetchUser();
   }, [router]);
+
+  // Load opened chats from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedOpenedChats = localStorage.getItem('openedChats');
+      if (savedOpenedChats) {
+        try {
+          const parsedChats = JSON.parse(savedOpenedChats);
+          setOpenedChats(new Set(parsedChats));
+        } catch (error) {
+          console.error('Error parsing opened chats from localStorage:', error);
+        }
+      }
+    }
+  }, []);
+
+  // Save opened chats to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('openedChats', JSON.stringify(Array.from(openedChats)));
+    }
+  }, [openedChats]);
 
   // 2. Fetch conversations
   useEffect(() => {
@@ -396,6 +420,20 @@ function MessagesContent() {
       loadMoreMessages();
     }
   }, [hasMoreMessages, loadingMoreMessages, loadMoreMessages]);
+
+  // Scroll to bottom function
+  const scrollToBottom = useCallback(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, []);
+
+  // Auto-scroll to bottom when new messages arrive (except when loading more)
+  useEffect(() => {
+    if (!loadingMoreMessages && messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages, loadingMoreMessages, scrollToBottom]);
 
   // 4. Send message
   const sendMessage = async (e: React.FormEvent) => {
@@ -1638,7 +1676,8 @@ function MessagesContent() {
           {selectedConversation ? (
             <motion.div
               key="chat"
-              className="flex flex-col h-full"
+              className="flex flex-col h-full max-h-screen"
+              style={{ height: 'calc(100vh - 80px)' }} // Adjust for header/navigation
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -1698,10 +1737,13 @@ function MessagesContent() {
 
               {/* Messages */}
               <motion.div 
+                ref={messagesContainerRef}
                 className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-3 lg:p-4 space-y-2 sm:space-y-3 lg:space-y-4 scroll-smooth"
                 style={{ 
                   scrollbarWidth: 'thin',
-                  scrollbarColor: '#FF9940 #111'
+                  scrollbarColor: '#FF9940 #111',
+                  maxHeight: 'calc(100vh - 200px)', // Ensure it fits on all devices
+                  minHeight: '300px' // Minimum height for usability
                 }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
