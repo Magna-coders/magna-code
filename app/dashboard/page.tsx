@@ -604,7 +604,7 @@ export default function HomeDashboard() {
                   <h4 className="font-bold text-[#F9E4AD] text-lg sm:text-xl lg:text-2xl mb-2 sm:mb-3">
                     {action.title}
                   </h4>
-                  <p className="text-xs sm:text-sm lg:text-base text-[#F9E4AD]/70 leading-relaxed">
+                  <p className="hidden lg:block text-xs sm:text-sm lg:text-base text-[#F9E4AD]/70 leading-relaxed">
                     {action.description}
                   </p>
                 </div>
