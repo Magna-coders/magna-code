@@ -18,6 +18,7 @@ interface ConnectionStats {
 
 class ConnectionMonitor {
   private static instance: ConnectionMonitor;
+  private _isConnected: boolean = true;
   private stats: ConnectionStats = {
     activeSubscriptions: 0,
     cacheHits: 0,
@@ -32,6 +33,20 @@ class ConnectionMonitor {
       ConnectionMonitor.instance = new ConnectionMonitor();
     }
     return ConnectionMonitor.instance;
+  }
+
+  /**
+   * Get connection status
+   */
+  get isConnected(): boolean {
+    return this._isConnected;
+  }
+
+  /**
+   * Set connection status
+   */
+  setConnectionStatus(connected: boolean): void {
+    this._isConnected = connected;
   }
 
   /**
