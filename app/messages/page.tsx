@@ -94,15 +94,34 @@ function MessagesContent() {
   const [friendsPage, setFriendsPage] = useState(0);
   const friendsPerPage = 6;
   const [unreadMessages, setUnreadMessages] = useState<Record<string, number>>({});
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Reset pagination when search query changes
   useEffect(() => {
     setFriendsPage(0);
   }, [friendSearchQuery]);
 
+  // Close mobile sidebar when conversation is selected
+  useEffect(() => {
+    if (selectedConversation) {
+      setIsMobileSidebarOpen(false);
+    }
+  }, [selectedConversation]);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const conversationId = searchParams.get("conversation");
+
+  // Helper function to get conversation name
+  const getConversationName = (conversation: Conversation) => {
+    if (conversation.type === 'direct') {
+      // For direct conversations, show the other participant's name
+      const otherParticipant = conversation.participants.find(p => p.user_id !== currentUser?.id);
+      return otherParticipant?.users.username || 'Unknown User';
+    }
+    // For group conversations, you could implement group name logic here
+    return 'Group Chat';
+  };
 
   // 1. Fetch logged-in user
   useEffect(() => {
@@ -991,14 +1010,32 @@ function MessagesContent() {
 
   return (
     <motion.div 
-      className="flex min-h-screen bg-black text-white"
+      className="flex min-h-screen bg-black text-white relative"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
+      {/* Mobile Overlay */}
+      {isMobileSidebarOpen && (
+        <motion.div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <motion.div 
-        className="w-80 bg-[#111] border-r border-[#333]"
+        className={`
+          fixed lg:relative lg:translate-x-0 z-50 lg:z-auto
+          w-80 sm:w-96 lg:w-80 xl:w-96 
+          bg-[#111] border-r border-[#333] 
+          h-full lg:h-auto
+          transition-transform duration-300 ease-in-out
+          ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}
         initial={{ x: -320, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ 
@@ -1009,23 +1046,36 @@ function MessagesContent() {
         }}
       >
         <motion.div 
-          className="p-4 border-b border-[#333]"
+          className="p-3 sm:p-4 border-b border-[#333]"
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          <motion.h2 
-            className="text-lg font-semibold text-[#F9E4AD] mb-3"
-            initial={{ x: -10, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            Messages
-          </motion.h2>
+          <div className="flex items-center justify-between mb-3">
+            <motion.h2 
+              className="text-lg sm:text-xl font-semibold text-[#F9E4AD]"
+              initial={{ x: -10, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              Messages
+            </motion.h2>
+            {/* Close button for mobile */}
+            <motion.button
+              onClick={() => setIsMobileSidebarOpen(false)}
+              className="lg:hidden p-2 rounded-lg bg-[#222] hover:bg-[#333] transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </motion.button>
+          </div>
           <div className="flex space-x-1 bg-[#222] rounded-lg p-1">
             <motion.button
               onClick={() => setActiveTab("conversations")}
-              className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+              className={`flex-1 py-2 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                 activeTab === "conversations" 
                   ? "bg-[#FF9940] text-black" 
                   : "text-gray-400 hover:text-white"
@@ -1033,11 +1083,12 @@ function MessagesContent() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              Chats ({conversations.length})
+              <span className="hidden sm:inline">Chats ({conversations.length})</span>
+              <span className="sm:hidden">Chats</span>
             </motion.button>
             <motion.button
               onClick={() => setActiveTab("friends")}
-              className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+              className={`flex-1 py-2 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                 activeTab === "friends" 
                   ? "bg-[#FF9940] text-black" 
                   : "text-gray-400 hover:text-white"
@@ -1045,11 +1096,12 @@ function MessagesContent() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              Friends ({friends.length})
+              <span className="hidden sm:inline">Friends ({friends.length})</span>
+              <span className="sm:hidden">Friends</span>
             </motion.button>
             <motion.button
               onClick={() => setActiveTab("requests")}
-              className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+              className={`flex-1 py-2 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                 activeTab === "requests" 
                   ? "bg-[#FF9940] text-black" 
                   : "text-gray-400 hover:text-white"
@@ -1057,11 +1109,12 @@ function MessagesContent() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              Requests ({pendingRequests.length})
+              <span className="hidden sm:inline">Requests ({pendingRequests.length})</span>
+              <span className="sm:hidden">Req</span>
             </motion.button>
           </div>
         </motion.div>
-        <div className="overflow-y-auto h-[calc(100%-120px)]">
+        <div className="overflow-y-auto h-[calc(100vh-140px)] sm:h-[calc(100%-120px)]">
           <AnimatePresence mode="wait">
             {/* Conversations Tab */}
             {activeTab === "conversations" && (
@@ -1099,7 +1152,7 @@ function MessagesContent() {
                     <motion.div
                       key={conv.id}
                       onClick={() => selectConversation(conv)}
-                      className={`p-4 border-b cursor-pointer transition-all duration-300 ${
+                      className={`p-3 sm:p-4 border-b cursor-pointer transition-all duration-300 min-h-[60px] sm:min-h-[auto] ${
                         selectedConversation?.id === conv.id 
                           ? "bg-[#222] border-[#FF9940]/50" 
                           : hasUnreadMessages
@@ -1120,9 +1173,9 @@ function MessagesContent() {
                       whileHover={{ scale: hasUnreadMessages ? 1.03 : 1.02, x: 5 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-2 sm:space-x-3">
                         <motion.div 
-                          className="w-10 h-10 rounded-full bg-[#FF9940]/20 flex items-center justify-center overflow-hidden"
+                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#FF9940]/20 flex items-center justify-center overflow-hidden flex-shrink-0"
                           whileHover={{ scale: 1.1, rotate: 5 }}
                           transition={{ type: "spring", stiffness: 300 }}
                         >
@@ -1133,21 +1186,23 @@ function MessagesContent() {
                               className="w-full h-full object-cover rounded-full"
                             />
                           ) : (
-                            friendUser?.username?.charAt(0).toUpperCase() || "?"
+                            <span className="text-xs sm:text-sm font-bold">
+                              {friendUser?.username?.charAt(0).toUpperCase() || "?"}
+                            </span>
                           )}
                         </motion.div>
-                        <div className="flex flex-col flex-1">
-                          <span className={`font-medium ${hasUnreadMessages ? 'text-[#F9E4AD] font-semibold' : 'text-[#F9E4AD]'}`}>
+                        <div className="flex flex-col flex-1 min-w-0">
+                          <span className={`font-medium text-sm sm:text-base truncate ${hasUnreadMessages ? 'text-[#F9E4AD] font-semibold' : 'text-[#F9E4AD]'}`}>
                             {friendUser?.username || "Unknown"}
                           </span>
                           {conv.last_message && (
-                            <span className={`text-xs truncate max-w-[200px] ${
+                            <span className={`text-xs sm:text-sm truncate ${
                               hasUnreadMessages 
                                 ? 'text-[#FF9940] font-semibold' 
                                 : 'text-[#FF9940]/70'
                             }`}>
                               {hasUnreadMessages && conv.last_message.sender_id !== currentUser?.id && (
-                                <span className="inline-block w-2 h-2 bg-[#FF9940] rounded-full mr-2 animate-pulse"></span>
+                                <span className="inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#FF9940] rounded-full mr-1 sm:mr-2 animate-pulse"></span>
                               )}
                               {conv.last_message.content}
                             </span>
@@ -1207,7 +1262,7 @@ function MessagesContent() {
               >
                 {/* Search Bar */}
                 <motion.div 
-                  className="p-4 border-b border-[#333]"
+                  className="p-3 sm:p-4 border-b border-[#333]"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
@@ -1218,9 +1273,9 @@ function MessagesContent() {
                       placeholder="Search friends..."
                       value={friendSearchQuery}
                       onChange={(e) => setFriendSearchQuery(e.target.value)}
-                      className="w-full bg-[#222] text-white px-4 py-2 pl-10 rounded-lg border border-[#333] focus:border-[#FF9940] focus:outline-none transition-colors"
+                      className="w-full bg-[#222] text-white px-3 sm:px-4 py-2 sm:py-3 pl-9 sm:pl-10 rounded-lg border border-[#333] focus:border-[#FF9940] focus:outline-none transition-colors text-sm sm:text-base min-h-[44px]"
                     />
-                    <div className="absolute left-3 top-2.5 text-gray-400">
+                    <div className="absolute left-2 sm:left-3 top-2 sm:top-2.5 text-gray-400 text-sm sm:text-base">
                       🔍
                     </div>
                   </div>
@@ -1267,7 +1322,7 @@ function MessagesContent() {
                   <motion.div
                     key={friend.friend_id}
                     onClick={() => startConversationWithFriend(friend)}
-                    className={`p-4 border-b border-[#333] cursor-pointer hover:bg-[#222] transition-colors ${
+                    className={`p-3 sm:p-4 border-b border-[#333] cursor-pointer hover:bg-[#222] transition-colors min-h-[60px] sm:min-h-[auto] ${
                       startingConversation === friend.friend_id ? 'opacity-50 cursor-not-allowed' : ''
                     }`}
                     initial={{ x: -50, opacity: 0 }}
@@ -1280,9 +1335,9 @@ function MessagesContent() {
                     whileHover={{ scale: startingConversation === friend.friend_id ? 1 : 1.02, x: startingConversation === friend.friend_id ? 0 : 5 }}
                     whileTap={{ scale: startingConversation === friend.friend_id ? 1 : 0.98 }}
                   >
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
                       <motion.div 
-                        className="w-10 h-10 rounded-full bg-[#FF9940]/20 flex items-center justify-center overflow-hidden"
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#FF9940]/20 flex items-center justify-center overflow-hidden flex-shrink-0"
                         whileHover={{ scale: 1.1, rotate: 5 }}
                         transition={{ type: "spring", stiffness: 300 }}
                       >
@@ -1293,19 +1348,21 @@ function MessagesContent() {
                             className="w-full h-full object-cover rounded-full"
                           />
                         ) : (
-                          friend.username?.charAt(0).toUpperCase() || "?"
+                          <span className="text-xs sm:text-sm font-bold">
+                            {friend.username?.charAt(0).toUpperCase() || "?"}
+                          </span>
                         )}
                       </motion.div>
-                      <div className="flex flex-col flex-1">
-                        <span className="font-medium text-[#F9E4AD]">
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <span className="font-medium text-[#F9E4AD] text-sm sm:text-base truncate">
                           {friend.username}
                         </span>
                         {friend.bio && (
-                          <span className="text-xs text-gray-400 truncate max-w-[200px]">
+                          <span className="text-xs sm:text-sm text-gray-400 truncate">
                             {friend.bio}
                           </span>
                         )}
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 truncate">
                           Connected {formatDistanceToNow(new Date(friend.connected_at), { addSuffix: true })}
                         </span>
                       </div>
@@ -1413,7 +1470,7 @@ function MessagesContent() {
                 {pendingRequests.map((request, index) => (
                   <motion.div
                     key={request.id}
-                    className="p-4 border-b border-[#333]"
+                    className="p-3 sm:p-4 border-b border-[#333]"
                     initial={{ x: -50, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ 
@@ -1422,9 +1479,9 @@ function MessagesContent() {
                       stiffness: 100
                     }}
                   >
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
                       <motion.div 
-                        className="w-10 h-10 rounded-full bg-[#FF9940]/20 flex items-center justify-center overflow-hidden"
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#FF9940]/20 flex items-center justify-center overflow-hidden flex-shrink-0"
                         whileHover={{ scale: 1.1, rotate: 5 }}
                         transition={{ type: "spring", stiffness: 300 }}
                       >
@@ -1435,27 +1492,29 @@ function MessagesContent() {
                             className="w-full h-full object-cover rounded-full"
                           />
                         ) : (
-                          request.sender_username?.charAt(0).toUpperCase() || "?"
+                          <span className="text-xs sm:text-sm font-bold">
+                            {request.sender_username?.charAt(0).toUpperCase() || "?"}
+                          </span>
                         )}
                       </motion.div>
-                      <div className="flex flex-col flex-1">
-                        <span className="font-medium text-[#F9E4AD]">
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <span className="font-medium text-[#F9E4AD] text-sm sm:text-base truncate">
                           {request.sender_username}
                         </span>
                         {request.message && (
-                          <span className="text-xs text-gray-400 truncate max-w-[200px]">
+                          <span className="text-xs sm:text-sm text-gray-400 truncate">
                             {request.message}
                           </span>
                         )}
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 truncate">
                           {formatDistanceToNow(new Date(request.created_at), { addSuffix: true })}
                         </span>
                       </div>
                     </div>
-                    <div className="flex space-x-2 mt-3">
+                    <div className="flex space-x-2 mt-2 sm:mt-3">
                       <motion.button
                         onClick={() => acceptFriendRequest(request.id)}
-                        className="bg-[#FF9940] text-black px-3 py-1 rounded-md text-sm hover:bg-[#E70008] transition-colors"
+                        className="bg-[#FF9940] text-black px-2 sm:px-3 py-1 sm:py-1.5 rounded-md text-xs sm:text-sm hover:bg-[#E70008] transition-colors flex-1 sm:flex-none"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
@@ -1463,7 +1522,7 @@ function MessagesContent() {
                       </motion.button>
                       <motion.button
                         onClick={() => declineFriendRequest(request.id)}
-                        className="bg-[#333] text-white px-3 py-1 rounded-md text-sm hover:bg-[#444] transition-colors"
+                        className="bg-[#333] text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-md text-xs sm:text-sm hover:bg-[#444] transition-colors flex-1 sm:flex-none"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
@@ -1480,7 +1539,7 @@ function MessagesContent() {
 
       {/* Chat window */}
       <motion.div 
-        className="flex-1 flex flex-col"
+        className="flex-1 flex flex-col min-w-0"
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ 
@@ -1490,6 +1549,29 @@ function MessagesContent() {
           delay: 0.4 
         }}
       >
+        {/* Mobile Header with Hamburger */}
+        <div className="lg:hidden flex items-center justify-between p-4 bg-[#111] border-b border-[#333]">
+          <motion.button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="p-2 rounded-lg bg-[#222] hover:bg-[#333] transition-colors"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </motion.button>
+          {selectedConversation && (
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-[#FF9940] to-[#E70008] rounded-full flex items-center justify-center text-sm font-bold">
+                {getConversationName(selectedConversation).charAt(0).toUpperCase()}
+              </div>
+              <span className="font-medium text-sm truncate max-w-32">
+                {getConversationName(selectedConversation)}
+              </span>
+            </div>
+          )}
+        </div>
         <AnimatePresence mode="wait">
           {selectedConversation ? (
             <motion.div
@@ -1500,9 +1582,9 @@ function MessagesContent() {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
             >
-              {/* Header with Back Button */}
+              {/* Header with Back Button - Hidden on mobile */}
               <motion.div 
-                className="flex items-center justify-between bg-[#111] border-b border-[#333] p-4"
+                className="hidden lg:flex items-center justify-between bg-[#111] border-b border-[#333] p-4"
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.1 }}
@@ -1553,11 +1635,11 @@ function MessagesContent() {
               </motion.div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
                 <AnimatePresence>
                   {messages.length === 0 && (
                     <motion.p 
-                      className="text-center text-gray-400"
+                      className="text-center text-gray-400 text-sm sm:text-base"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3 }}
@@ -1585,7 +1667,7 @@ function MessagesContent() {
                       layout
                     >
                       <motion.div
-                        className={`max-w-xs lg:max-w-md xl:max-w-lg px-4 py-2 rounded-lg ${
+                        className={`max-w-[85%] sm:max-w-xs lg:max-w-md xl:max-w-lg px-3 sm:px-4 py-2 sm:py-3 rounded-lg ${
                           msg.sender_id === currentUser?.id
                             ? "bg-[#E70008] text-white"
                             : "bg-[#222] text-[#F9E4AD]"
@@ -1631,18 +1713,18 @@ function MessagesContent() {
               {/* Input */}
               <motion.form 
                 onSubmit={sendMessage} 
-                className="bg-[#111] border-t border-[#333] p-4"
+                className="bg-[#111] border-t border-[#333] p-3 sm:p-4"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
               >
-                <div className="flex space-x-4">
+                <div className="flex space-x-2 sm:space-x-4">
                   <motion.input
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Type a message..."
-                    className="flex-1 bg-[#222] text-[#F9E4AD] rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9940]"
+                    className="flex-1 bg-[#222] text-[#F9E4AD] rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#FF9940] min-h-[44px]"
                     disabled={sending}
                     whileFocus={{ scale: 1.02 }}
                     transition={{ type: "spring", stiffness: 300 }}
@@ -1650,11 +1732,19 @@ function MessagesContent() {
                   <motion.button
                     type="submit"
                     disabled={!newMessage.trim() || sending}
-                    className="bg-[#E70008] hover:bg-[#FF9940] text-white px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-[#E70008] hover:bg-[#FF9940] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base min-h-[44px] min-w-[60px] sm:min-w-[80px]"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    {sending ? "Sending..." : "Send"}
+                    {sending ? (
+                      <span className="hidden sm:inline">Sending...</span>
+                    ) : (
+                      <span className="hidden sm:inline">Send</span>
+                    )}
+                    {/* Mobile send icon */}
+                    <svg className="w-5 h-5 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
                   </motion.button>
                 </div>
               </motion.form>
