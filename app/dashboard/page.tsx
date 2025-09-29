@@ -480,31 +480,31 @@ export default function HomeDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="bg-[#E70008]/10 border border-[#E70008]/30 rounded-2xl p-8">
+          <div className="bg-[#E70008]/10 border border-[#E70008]/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8">
             {loading ? (
               <div className="animate-pulse">
                 <div className="h-8 bg-[#E70008]/20 rounded w-64 mb-2"></div>
                 <div className="h-4 bg-[#E70008]/20 rounded w-48"></div>
               </div>
             ) : user ? (
-              <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8">
-                <div className="flex items-center gap-6">
-                  <div className="relative">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 sm:gap-6 lg:gap-8">
+                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full lg:w-auto">
+                  <div className="relative flex-shrink-0">
                     <img 
                       src={user.avatar_url || "/placeholder-avatar.jpg"} 
                       alt="Profile" 
-                      className="w-24 h-24 rounded-full border-2 border-[#E70008]/50"
+                      className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full border-2 border-[#E70008]/50"
                     />
                   </div>
-                  <div>
-                    <h2 className="text-4xl font-bold text-[#F9E4AD] mb-2">
+                  <div className="text-center sm:text-left">
+                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#F9E4AD] mb-1 sm:mb-2">
                       Welcome back, {user.username}!
                     </h2>
-                    <p className="text-[#F9E4AD]/80 text-lg">
+                    <p className="text-[#F9E4AD]/80 text-sm sm:text-base lg:text-lg">
                       Ready to build something amazing?
                     </p>
                     <motion.button 
-                      className="mt-4 px-6 py-3 bg-[#E70008] text-white font-bold rounded-lg hover:bg-[#E70008]/90 transition-colors duration-300"
+                      className="mt-3 sm:mt-4 px-4 sm:px-6 py-2 sm:py-3 bg-[#E70008] text-white font-bold rounded-lg hover:bg-[#E70008]/90 transition-colors duration-300 text-sm sm:text-base w-full sm:w-auto"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => router.push('/profile/update')}
@@ -514,18 +514,18 @@ export default function HomeDashboard() {
                   </div>
                 </div>
                 
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-                  <div className="bg-black/30 border border-white/20 rounded-xl p-6">
-                    <h3 className="text-[#FF9940] font-bold text-2xl mb-2">{user.projectsJoined || 0}</h3>
-                    <p className="text-[#F9E4AD]/80 font-medium">Active Projects</p>
+                <div className="flex-1 grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-4 lg:gap-6 w-full mt-4 lg:mt-0">
+                  <div className="bg-black/30 border border-white/20 rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 text-center">
+                    <h3 className="text-[#FF9940] font-bold text-lg sm:text-xl lg:text-2xl mb-1 sm:mb-2">{user.projectsJoined || 0}</h3>
+                    <p className="text-[#F9E4AD]/80 font-medium text-xs sm:text-sm lg:text-base">Active Projects</p>
                   </div>
-                  <div className="bg-black/30 border border-white/20 rounded-xl p-6">
-                    <h3 className="text-[#FF9940] font-bold text-2xl mb-2">{user.connections || 0}</h3>
-                    <p className="text-[#F9E4AD]/80 font-medium">Connections</p>
+                  <div className="bg-black/30 border border-white/20 rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 text-center">
+                    <h3 className="text-[#FF9940] font-bold text-lg sm:text-xl lg:text-2xl mb-1 sm:mb-2">{user.connections || 0}</h3>
+                    <p className="text-[#F9E4AD]/80 font-medium text-xs sm:text-sm lg:text-base">Connections</p>
                   </div>
-                  <div className="bg-black/30 border border-white/20 rounded-xl p-6">
-                    <h3 className="text-[#FF9940] font-bold text-2xl mb-2">{user.skills?.length || 0}</h3>
-                    <p className="text-[#F9E4AD]/80 font-medium">Skills</p>
+                  <div className="bg-black/30 border border-white/20 rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 text-center">
+                    <h3 className="text-[#FF9940] font-bold text-lg sm:text-xl lg:text-2xl mb-1 sm:mb-2">{user.skills?.length || 0}</h3>
+                    <p className="text-[#F9E4AD]/80 font-medium text-xs sm:text-sm lg:text-base">Skills</p>
                   </div>
                 </div>
               </div>
@@ -541,12 +541,12 @@ export default function HomeDashboard() {
             )}
             
             {user && (
-              <div className="mt-8">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-[#F9E4AD]/80 font-medium text-lg">Profile Completion</span>
-                  <span className="text-[#FF9940] font-bold text-xl">{user.profileComplete}%</span>
+              <div className="mt-6 sm:mt-8">
+                <div className="flex justify-between items-center mb-3 sm:mb-4">
+                  <span className="text-[#F9E4AD]/80 font-medium text-base sm:text-lg">Profile Completion</span>
+                  <span className="text-[#FF9940] font-bold text-lg sm:text-xl">{user.profileComplete}%</span>
                 </div>
-                <div className="w-full bg-black/40 rounded-full h-3 border border-white/20">
+                <div className="w-full bg-black/40 rounded-full h-2 sm:h-3 border border-white/20">
                   <motion.div 
                     className="h-full bg-[#E70008] rounded-full"
                     initial={{ width: 0 }}
@@ -560,16 +560,16 @@ export default function HomeDashboard() {
         </motion.section>
 
         {/* Quick Actions */}
-        <motion.section className="mb-8"
+        <motion.section className="mb-6 sm:mb-8 lg:mb-10"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <h3 className="text-3xl font-bold text-[#F9E4AD] mb-6">
+          <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#F9E4AD] mb-4 sm:mb-6 lg:mb-8">
             Quick Actions
           </h3>
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8"
             initial="hidden"
             animate="visible"
             variants={{
@@ -585,7 +585,7 @@ export default function HomeDashboard() {
               <motion.button
                 key={index}
                 onClick={action.action}
-                className="bg-[#E70008]/10 border border-[#E70008]/30 rounded-2xl p-8 hover:bg-[#E70008]/20 transition-all duration-300"
+                className="bg-[#E70008]/10 border border-[#E70008]/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 hover:bg-[#E70008]/20 transition-all duration-300"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 initial={{ opacity: 0, y: 20 }}
@@ -593,18 +593,18 @@ export default function HomeDashboard() {
                 transition={{ duration: 0.4, delay: 0.1 * index }}
               >
                 {action.badge && (
-                  <div className="absolute top-3 right-3 bg-[#E70008] text-white text-xs font-bold px-3 py-1 rounded-full min-w-[24px] text-center shadow-lg">
+                  <div className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-[#E70008] text-white text-xs sm:text-sm font-bold px-2 py-1 sm:px-3 sm:py-1 rounded-full min-w-[20px] sm:min-w-[24px] text-center shadow-lg">
                     {action.badge}
                   </div>
                 )}
                 <div className="text-center">
-                  <div className={`w-16 h-16 mx-auto mb-4 ${action.color} rounded-xl flex items-center justify-center text-2xl`}>
+                  <div className={`w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 mx-auto mb-3 sm:mb-4 lg:mb-5 ${action.color} rounded-lg sm:rounded-xl flex items-center justify-center text-xl sm:text-2xl lg:text-3xl`}>
                     {action.icon}
                   </div>
-                  <h4 className="font-bold text-[#F9E4AD] text-xl mb-2">
+                  <h4 className="font-bold text-[#F9E4AD] text-lg sm:text-xl lg:text-2xl mb-2 sm:mb-3">
                     {action.title}
                   </h4>
-                  <p className="text-sm text-[#F9E4AD]/70">
+                  <p className="text-xs sm:text-sm lg:text-base text-[#F9E4AD]/70 leading-relaxed">
                     {action.description}
                   </p>
                 </div>
