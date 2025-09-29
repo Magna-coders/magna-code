@@ -530,6 +530,9 @@ function MessagesContent() {
       return prev;
     });
     
+    // Mark chat as opened
+    setOpenedChats(prev => new Set([...prev, conv.id]));
+    
     // Clear unread count for this conversation
     setUnreadMessages(prev => ({
       ...prev,
@@ -1150,14 +1153,28 @@ function MessagesContent() {
           transition={{ delay: 0.3 }}
         >
           <div className="flex items-center justify-between mb-3">
-            <motion.h2 
-              className="text-lg sm:text-xl font-semibold text-[#F9E4AD]"
-              initial={{ x: -10, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
-            >
-              Messages
-            </motion.h2>
+            <div className="flex items-center space-x-3">
+              {/* Back button */}
+              <motion.button
+                onClick={() => router.push('/dashboard')}
+                className="p-2 rounded-lg bg-[#222] hover:bg-[#333] transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                title="Back to Dashboard"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </motion.button>
+              <motion.h2 
+                className="text-lg sm:text-xl font-semibold text-[#F9E4AD]"
+                initial={{ x: -10, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+              >
+                Messages
+              </motion.h2>
+            </div>
             {/* Close button for mobile */}
             <motion.button
               onClick={() => setIsMobileSidebarOpen(false)}
@@ -1245,6 +1262,7 @@ function MessagesContent() {
                   console.log("Friend participant:", friendParticipant, "friend user:", friendUser);
 
                   const hasUnreadMessages = (conv.unread_count || unreadMessages[conv.id]) && (conv.unread_count || unreadMessages[conv.id]) > 0;
+                  const isUnopenedChat = !openedChats.has(conv.id);
                   
                   return (
                     <motion.div
@@ -1298,8 +1316,7 @@ function MessagesContent() {
                               hasUnreadMessages 
                                 ? 'text-[#FF9940] font-semibold' 
                                 : 'text-[#FF9940]/70'
-                            }`}>
-
+                            } ${isUnopenedChat ? 'blur-sm' : ''}`}>
                               {conv.last_message.content}
                             </span>
                           )}
@@ -1328,7 +1345,14 @@ function MessagesContent() {
                               })()}
                             </span>
                           )}
-
+                          {isUnopenedChat && (
+                            <motion.div
+                              className="w-3 h-3 bg-red-500 rounded-full"
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: "spring", stiffness: 300 }}
+                            />
+                          )}
                         </div>
                       </div>
                     </motion.div>
