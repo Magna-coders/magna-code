@@ -471,6 +471,8 @@ function MessagesContent() {
   useEffect(() => {
     if (!selectedConversation || !currentUser) return;
 
+    console.log('Setting up real-time subscription for conversation:', selectedConversation.id);
+
     // Subscribe to new messages in the current conversation
     const subscription = supabase
       .channel(`messages:${selectedConversation.id}`)
@@ -483,6 +485,7 @@ function MessagesContent() {
           filter: `conversation_id=eq.${selectedConversation.id}`
         },
         async (payload) => {
+          console.log('Real-time message received:', payload);
           // Skip messages from the current user (they're already handled by sendMessage)
           if (payload.new.sender_id === currentUser.id) {
             return;
@@ -556,10 +559,13 @@ function MessagesContent() {
           }, 100);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+      });
 
     // Cleanup subscription when conversation changes or component unmounts
     return () => {
+      console.log('Cleaning up subscription for conversation:', selectedConversation.id);
       supabase.removeChannel(subscription);
     };
   }, [selectedConversation?.id, currentUser?.id]);
@@ -700,6 +706,8 @@ function MessagesContent() {
   useEffect(() => {
     if (!currentUser) return;
 
+    console.log('Setting up unread messages subscription for user:', currentUser.id);
+
     // Subscribe to all new messages to track unread counts
     const unreadSubscription = supabase
       .channel(`unread_messages:${currentUser.id}`)
@@ -711,6 +719,7 @@ function MessagesContent() {
           table: 'messages'
         },
         async (payload) => {
+          console.log('Unread message subscription received:', payload);
           const newMessage = payload.new as {
             id: string;
             conversation_id: string;
@@ -792,9 +801,12 @@ function MessagesContent() {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Unread subscription status:', status);
+      });
 
     return () => {
+      console.log('Cleaning up unread subscription for user:', currentUser.id);
       supabase.removeChannel(unreadSubscription);
     };
   }, [currentUser?.id, selectedConversation?.id]);
