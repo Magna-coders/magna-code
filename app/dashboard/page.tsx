@@ -12,6 +12,13 @@ interface User {
   email: string;
   avatar_url?: string;
   bio?: string;
+  location?: string;
+  availability?: string;
+  website_url?: string;
+  github_url?: string;
+  twitter_url?: string;
+  linkedin_url?: string;
+  whatsapp_url?: string;
   skills: string[];
   profileComplete: number;
   projectsJoined: number;
@@ -168,7 +175,7 @@ export default function HomeDashboard() {
               username: uniqueUsername,
               email: authUser.email
             }])
-            .select()
+            .select('id, username, email, avatar_url, bio, location, availability, website_url, github_url, twitter_url, linkedin_url, whatsapp_url')
             .single();
 
           if (insertError) {
@@ -181,7 +188,7 @@ export default function HomeDashboard() {
           // User exists, fetch complete data
           const { data: completeUser } = await supabase
             .from('users')
-            .select('id, username, email, avatar_url, bio')
+            .select('id, username, email, avatar_url, bio, location, availability, website_url, github_url, twitter_url, linkedin_url, whatsapp_url')
             .eq('id', authUser.id)
             .single();
           userData = completeUser;
@@ -232,6 +239,13 @@ export default function HomeDashboard() {
         email: userData?.email || authUser.email,
         avatar_url: userData?.avatar_url,
         bio: userData?.bio,
+        location: (userData as any)?.location,
+        availability: (userData as any)?.availability || 'available',
+        website_url: (userData as any)?.website_url,
+        github_url: (userData as any)?.github_url,
+        twitter_url: (userData as any)?.twitter_url,
+        linkedin_url: (userData as any)?.linkedin_url,
+        whatsapp_url: (userData as any)?.whatsapp_url,
         skills: skillsData?.map(s => s.skill_name) || [],
         profileComplete: Math.min(profileComplete, 100),
         projectsJoined: projectsCount || 0,
@@ -434,7 +448,23 @@ export default function HomeDashboard() {
                   src={user.avatar_url} 
                   alt="Profile" 
                   className="w-8 h-8 rounded-full border border-[#E70008]/50 hover:border-[#FF9940] transition-colors cursor-pointer"
-                  onClick={() => router.push('/profile')}
+                  onClick={() => router.push(`/profile-view?member=${encodeURIComponent(JSON.stringify({
+                    id: user.id,
+                    username: user.username,
+                    email: user.email,
+                    avatar_url: user.avatar_url,
+                    bio: user.bio,
+                    location: user.location || '',
+                    availability: user.availability || 'available',
+                    website_url: user.website_url || '',
+                    github_url: user.github_url || '',
+                    twitter_url: user.twitter_url || '',
+                    linkedin_url: user.linkedin_url || '',
+                    whatsapp_url: user.whatsapp_url || '',
+                    user_categories: [],
+                    user_roles: [],
+                    user_skills: user.skills.map(skill => ({ skill_name: skill }))
+                  }))}`)}
                 />
               )}
               <button 
