@@ -1,0 +1,179 @@
+🧠 Full AI Design Prompt: Magna Coders Dashboard (Facebook-Style Layout)
+
+Goal:
+Design a web dashboard UI for the Magna Coders Community App using a three-panel Facebook-style layout with a creative, collaborative feel.
+The dashboard should visually balance productivity and community — structured like a digital coworking space.
+
+🎨 Visual Style
+
+Background color: Cream #F9E4AD
+
+Primary colors (for icons, buttons, and accents):
+
+Red #E70008
+
+Black #000000
+
+Orange #FF9940
+
+Typography: Modern, clean sans-serif (e.g., Inter, Poppins, or Open Sans).
+
+Layout: Grid-based, flat modern UI with slight soft shadows and 2xl-rounded corners on cards/buttons.
+
+Aesthetic: Warm, collaborative, energetic — not corporate.
+
+🧭 Page Layout
+
+Use a 3-panel structure across the full width of the screen:
+
+---------------------------------------------------------
+| LEFT PANEL | CENTER PANEL (MAIN FEED) | RIGHT PANEL |
+---------------------------------------------------------
+
+🅰️ LEFT PANEL – Navigation & Identity
+
+Purpose: Stable anchor for identity and navigation. Fixed on desktop.
+
+Panel Width: 20–25% of viewport.
+
+Content:
+
+User avatar + name at top.
+
+Online indicator (green dot).
+
+Vertical menu with icons and text:
+
+🏠 Dashboard
+
+👥 Members
+
+💼 Projects
+
+💬 Chats
+
+📍 Local Discovery
+
+🏅 Recognition
+
+⚙️ Settings
+
+Divider line.
+
+Primary CTA buttons (styled in red #E70008 with white text):
+
+➕ Create Project
+
+🔍 Find Collaborators
+
+🪶 Post Update
+
+Secondary section:
+
+📚 Mentorship
+
+🛠️ Resources
+
+❓ Help Center
+
+Visual Tone:
+Cards and buttons with light shadows and rounded corners, icons outlined in red or orange.
+
+🅱️ CENTER PANEL – Main Feed & Actions
+
+Purpose: The heart of the dashboard — hybrid content feed and collaboration stream.
+
+Panel Width: 50–60% of viewport.
+
+Top Section:
+
+Header: “Welcome back, Ashwa!”
+
+Profile snapshot with stats (Projects | Connections | Skills | Level).
+
+Profile completion progress bar.
+
+Composer Section (Post Input Box):
+
+Placeholder: “What are you building today?”
+
+Buttons below: 🎥 Reel | 🖼️ Photo | 🧩 Project | 💼 Opportunity
+
+Buttons use orange #FF9940 for active state, red for default.
+
+Feed Section (Scrollable List):
+
+Feed Item Types (Cards):
+
+Reel / Demo Video Card – video thumbnail, likes/comments.
+
+Project Invitation Card – join button, skill tags, roles.
+
+Design Drop Card – image preview, reactions.
+
+Business Opportunity Card – logo, “Apply Now” button.
+
+Text Update Card – announcement, plain text, minimal border.
+
+Filter Tabs (Top of Feed):
+All | Reels | Projects | Opportunities | Designs
+
+Active tab highlighted in red.
+
+Sort Dropdown (Top Right):
+Recent | Trending | Local | Network
+
+Scrolling Behavior:
+Infinite scroll with sticky filter bar.
+Hover states slightly lift cards (shadow increase).
+
+🅲️ RIGHT PANEL – Context & Awareness
+
+Purpose: Keeps user aware of activity, invitations, and recognition.
+
+Panel Width: 20–25% of viewport.
+
+Content (Stacked Cards):
+
+Invitations & Requests Card
+
+Accept / Decline buttons in red/orange.
+
+Trending Now Card
+
+3 compact items (Reel / Project / Business).
+
+Your Stats & Achievements Card
+
+Projects Active/Completed, Skills, Badges.
+
+Active Members Card
+
+Avatars with green online indicators.
+
+Upcoming Events Card
+
+Event name, time, “Join Event” button.
+
+Styling:
+Each card rounded with soft cream background, header bars in orange.
+Section titles in black #000000.
+
+📱 Responsive Rules
+
+On mobile:
+
+Left panel → collapsible hamburger menu.
+
+Right panel → slides out as modal from the side.
+
+Floating “+” FAB (red) for Create Project / Post Update.
+
+Feed remains central focus.
+
+💡 Design Intention for AI
+
+Create a warm, modern dashboard inspired by Facebook’s main layout —
+left navigation for identity, center feed for creation, right panel for awareness.
+Use the provided color palette (cream background, red/black/orange accents)
+and design with rounded, clean cards that invite interaction and collaboration.
