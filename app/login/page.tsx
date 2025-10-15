@@ -89,8 +89,8 @@ export default function Login() {
       }
 
       if (data.user) {
-        // Successful login - send user to dashboard first
-        router.push('/dashboard');
+        // Successful login - send user to new dashboard
+        router.push('/new-dashboard');
       }
     } catch (error: unknown) {
       console.error('Login error:', error);
