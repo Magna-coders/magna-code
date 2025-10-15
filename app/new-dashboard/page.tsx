@@ -358,22 +358,25 @@ export default function NewDashboard() {
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkTheme ? 'bg-gray-900' : 'bg-[#F9E4AD]'}`}>
       {/* Mobile Header */}
-      <div className={`sm:hidden fixed top-0 left-0 right-0 z-30 p-4 backdrop-blur-sm border-b transition-colors duration-300 ${isDarkTheme ? 'bg-gray-800/95 border-gray-700' : 'bg-white/95 border-gray-200'}`}>
+      <div className={`sm:hidden fixed top-0 left-0 right-0 z-30 px-4 py-3 backdrop-blur-sm border-b transition-colors duration-300 ${isDarkTheme ? 'bg-gray-800/95 border-gray-700' : 'bg-white/95 border-gray-200'}`}>
         <div className="flex items-center justify-between">
           <button
             onClick={() => setShowMobileSidebar(!showMobileSidebar)}
-            className={`p-2 rounded-lg transition-colors ${isDarkTheme ? 'text-white hover:bg-gray-700' : 'text-black hover:bg-gray-200'}`}
+            className={`p-3 rounded-xl transition-colors ${isDarkTheme ? 'text-white hover:bg-gray-700' : 'text-black hover:bg-gray-200'}`}
           >
             <Menu className="w-6 h-6" />
           </button>
-          <img 
-            src="/community app logo.png" 
-            alt="Magna Coders" 
-            className="w-8 h-8 rounded-lg object-cover"
-          />
+          <div className="flex items-center space-x-2">
+            <img 
+              src="/community app logo.png" 
+              alt="Magna Coders" 
+              className="w-9 h-9 rounded-lg object-cover"
+            />
+            <span className={`font-bold text-lg ${isDarkTheme ? 'text-white' : 'text-black'}`}>Magna</span>
+          </div>
           <button
             onClick={toggleTheme}
-            className={`p-2 rounded-lg transition-colors ${isDarkTheme ? 'text-white hover:bg-gray-700' : 'text-black hover:bg-gray-200'}`}
+            className={`p-3 rounded-xl transition-colors ${isDarkTheme ? 'text-white hover:bg-gray-700' : 'text-black hover:bg-gray-200'}`}
           >
             {isDarkTheme ? (
               <Sun className="w-5 h-5 text-yellow-500" />
@@ -392,7 +395,7 @@ export default function NewDashboard() {
         />
       )}
 
-      <div className="flex w-full relative">
+      <div className="flex w-full relative min-h-screen">
         {/* LEFT PANEL - Navigation & Identity */}
         <div className={`w-full sm:w-80 lg:w-1/4 h-screen backdrop-blur-sm border-r p-4 sm:p-6 fixed left-0 top-0 overflow-y-auto z-20 scrollbar-thin scrollbar-thumb-[#E70008] transition-all duration-300 transform ${showMobileSidebar ? 'translate-x-0' : '-translate-x-full'} sm:translate-x-0 ${isDarkTheme ? 'bg-gray-800/95 border-gray-700 scrollbar-track-gray-700' : 'bg-white/95 border-gray-200 scrollbar-track-gray-200'}`}>
           {/* App Logo & Search */}
@@ -529,10 +532,10 @@ export default function NewDashboard() {
         </div>
 
         {/* CENTER PANEL - Main Feed & Actions */}
-        <div className="flex-1 p-4 sm:p-6 pt-20 sm:pt-6 ml-0 sm:ml-80 lg:ml-[25%] mr-0 lg:mr-[25%] overflow-y-auto max-h-screen">
+        <div className="flex-1 p-3 sm:p-6 pt-16 sm:pt-6 ml-0 sm:ml-80 lg:ml-[25%] mr-0 lg:mr-[25%] overflow-y-auto min-h-screen w-full">
           {/* Header */}
-          <div className="mb-4 sm:mb-6">
-            <h1 className={`text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4 ${isDarkTheme ? 'text-white' : 'text-black'}`}>Welcome back, {user?.username}!</h1>
+          <div className="mb-6 sm:mb-6">
+            <h1 className={`text-2xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-4 ${isDarkTheme ? 'text-white' : 'text-black'}`}>Welcome back, {user?.username}!</h1>
             
             {/* Profile Snapshot */}
             {showProfileCard && (
@@ -566,17 +569,17 @@ export default function NewDashboard() {
           </div>
 
           {/* Composer Section */}
-          <div className={`backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg mb-4 sm:mb-6 ${isDarkTheme ? 'bg-gray-800/70' : 'bg-white/70'}`}>
+          <div className={`backdrop-blur-sm rounded-xl sm:rounded-2xl p-5 sm:p-6 shadow-lg mb-6 sm:mb-6 ${isDarkTheme ? 'bg-gray-800/70' : 'bg-white/70'}`}>
             {/* User Profile Header */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-[#E70008]">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-[#E70008]">
                 <img
                   src={user?.avatar_url || '/icons/icon-32.png'}
                   alt={user?.username || 'User'}
                   className="w-full h-full object-cover"
                 />
               </div>
-              <span className={`font-medium text-sm sm:text-base ${isDarkTheme ? 'text-gray-200' : 'text-gray-800'}`}>
+              <span className={`font-medium text-base sm:text-base ${isDarkTheme ? 'text-gray-200' : 'text-gray-800'}`}>
                 {user?.username || 'User'}
               </span>
             </div>
@@ -586,31 +589,31 @@ export default function NewDashboard() {
               value={postContent}
               onChange={(e) => setPostContent(e.target.value)}
               placeholder="What are you building today?"
-              className={`w-full p-3 sm:p-4 border rounded-xl sm:rounded-2xl resize-none focus:ring-2 focus:ring-[#E70008] text-sm sm:text-base ${isDarkTheme ? 'border-gray-600 bg-gray-700/50 text-white placeholder-gray-400' : 'border-gray-200 bg-white/50 text-black placeholder-gray-500'}`}
-              rows={3}
+              className={`w-full p-4 sm:p-4 border rounded-xl sm:rounded-2xl resize-none focus:ring-2 focus:ring-[#E70008] text-base sm:text-base ${isDarkTheme ? 'border-gray-600 bg-gray-700/50 text-white placeholder-gray-400' : 'border-gray-200 bg-white/50 text-black placeholder-gray-500'}`}
+              rows={4}
             />
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-4 gap-3">
-              <div className="flex flex-wrap gap-2 sm:gap-3">
-                <button className="flex items-center px-3 py-2 sm:px-4 bg-[#FF9940] text-white rounded-xl sm:rounded-2xl hover:bg-orange-600 transition-colors text-xs sm:text-sm">
-                  <Video className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-5 gap-4">
+              <div className="flex flex-wrap gap-3 sm:gap-3">
+                <button className="flex items-center px-4 py-3 sm:px-4 sm:py-2 bg-[#FF9940] text-white rounded-xl sm:rounded-2xl hover:bg-orange-600 transition-colors text-sm sm:text-sm">
+                  <Video className="w-4 h-4 sm:w-4 sm:h-4 mr-2 sm:mr-2" />
                   Reel
                 </button>
-                <button className="flex items-center px-3 py-2 sm:px-4 bg-[#E70008] text-white rounded-xl sm:rounded-2xl hover:bg-red-700 transition-colors text-xs sm:text-sm">
-                  <Image className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                <button className="flex items-center px-4 py-3 sm:px-4 sm:py-2 bg-[#E70008] text-white rounded-xl sm:rounded-2xl hover:bg-red-700 transition-colors text-sm sm:text-sm">
+                  <Image className="w-4 h-4 sm:w-4 sm:h-4 mr-2 sm:mr-2" />
                   Photo
                 </button>
-                <button className="flex items-center px-3 py-2 sm:px-4 bg-[#E70008] text-white rounded-xl sm:rounded-2xl hover:bg-red-700 transition-colors text-xs sm:text-sm">
-                  <Puzzle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                <button className="flex items-center px-4 py-3 sm:px-4 sm:py-2 bg-[#E70008] text-white rounded-xl sm:rounded-2xl hover:bg-red-700 transition-colors text-sm sm:text-sm">
+                  <Puzzle className="w-4 h-4 sm:w-4 sm:h-4 mr-2 sm:mr-2" />
                   Project
                 </button>
-                <button className="flex items-center px-3 py-2 sm:px-4 bg-[#E70008] text-white rounded-xl sm:rounded-2xl hover:bg-red-700 transition-colors text-xs sm:text-sm">
-                  <Briefcase className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                <button className="flex items-center px-4 py-3 sm:px-4 sm:py-2 bg-[#E70008] text-white rounded-xl sm:rounded-2xl hover:bg-red-700 transition-colors text-sm sm:text-sm">
+                  <Briefcase className="w-4 h-4 sm:w-4 sm:h-4 mr-2 sm:mr-2" />
                   Opportunity
                 </button>
               </div>
               <button 
                 onClick={handleCreatePost}
-                className="px-4 py-2 sm:px-6 bg-[#E70008] text-white rounded-xl sm:rounded-2xl hover:bg-red-700 transition-colors font-semibold text-sm sm:text-base w-full sm:w-auto"
+                className="px-6 py-3 sm:px-6 sm:py-2 bg-[#E70008] text-white rounded-xl sm:rounded-2xl hover:bg-red-700 transition-colors font-semibold text-base sm:text-base w-full sm:w-auto"
               >
                 Post
               </button>
@@ -618,8 +621,8 @@ export default function NewDashboard() {
           </div>
 
           {/* Filter Tabs */}
-          <div className="flex justify-center sm:justify-between items-center mb-4 sm:mb-6">
-            <div className={`flex flex-wrap gap-1 sm:space-x-1 rounded-xl sm:rounded-2xl p-1 shadow-lg ${isDarkTheme ? 'bg-gray-800/50' : 'bg-white/50'}`}>
+          <div className="flex justify-center sm:justify-between items-center mb-6 sm:mb-6">
+            <div className={`flex flex-wrap gap-2 sm:space-x-1 rounded-xl sm:rounded-2xl p-2 shadow-lg ${isDarkTheme ? 'bg-gray-800/50' : 'bg-white/50'}`}>
               {['All', 'Reels', 'Projects', 'Opportunities', 'Designs'].map((filter) => {
                 const isActive = activeFilter === filter;
 
@@ -627,7 +630,7 @@ export default function NewDashboard() {
                   <button
                     key={filter}
                     onClick={() => setActiveFilter(filter)}
-                    className={`relative px-2 py-1 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl font-medium transition-all duration-300 transform text-xs sm:text-sm ${
+                    className={`relative px-4 py-2 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl font-medium transition-all duration-300 transform text-sm sm:text-sm ${
                       isActive
                         ? 'bg-[#E70008] text-white shadow-lg scale-105'
                         : `${isDarkTheme ? 'text-white hover:bg-gray-700/70' : 'text-black hover:bg-white/70'} hover:scale-102`
@@ -635,7 +638,7 @@ export default function NewDashboard() {
                   >
                     {filter}
                     {isActive && (
-                      <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 sm:w-2 sm:h-2 bg-[#E70008] rounded-full"></div>
+                      <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 sm:w-2 sm:h-2 bg-[#E70008] rounded-full"></div>
                     )}
                   </button>
                 );
