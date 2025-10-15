@@ -131,7 +131,7 @@ export default function HomeDashboard() {
       // Fetch user profile from public.users table
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('id, username, email, avatar_url, bio')
+        .select('id, username, email, avatar_url, bio, location, availability, website_url, github_url, twitter_url, linkedin_url, whatsapp_url')
         .eq('id', authUser.id)
         .single();
 
@@ -239,13 +239,13 @@ export default function HomeDashboard() {
         email: userData?.email || authUser.email,
         avatar_url: userData?.avatar_url,
         bio: userData?.bio,
-        location: (userData as any)?.location,
-        availability: (userData as any)?.availability || 'available',
-        website_url: (userData as any)?.website_url,
-        github_url: (userData as any)?.github_url,
-        twitter_url: (userData as any)?.twitter_url,
-        linkedin_url: (userData as any)?.linkedin_url,
-        whatsapp_url: (userData as any)?.whatsapp_url,
+        location: userData?.location,
+        availability: userData?.availability || 'available',
+        website_url: userData?.website_url,
+        github_url: userData?.github_url,
+        twitter_url: userData?.twitter_url,
+        linkedin_url: userData?.linkedin_url,
+        whatsapp_url: userData?.whatsapp_url,
         skills: skillsData?.map(s => s.skill_name) || [],
         profileComplete: Math.min(profileComplete, 100),
         projectsJoined: projectsCount || 0,
