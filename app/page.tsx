@@ -324,7 +324,7 @@ export default function Home() {
                 >
                   <IconBolt size={24} />
                 </motion.div>
-                What's Happening Inside
+                What&apos;s Happening Inside
               </motion.h3>
               
               <div className="space-y-3">
