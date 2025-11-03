@@ -1659,42 +1659,90 @@ function MessagesContent() {
           delay: 0.4 
         }}
       >
-        {/* Mobile Header with Hamburger */}
+        {/* WhatsApp-style Mobile Header */}
         <motion.div 
-          className="lg:hidden flex items-center justify-between p-3 sm:p-4 bg-[#111] border-b border-[#333]"
+          className="lg:hidden flex items-center p-3 sm:p-4 bg-[#111] border-b border-[#333]"
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
         >
           <motion.button
             onClick={() => setIsMobileSidebarOpen(true)}
-            className="p-2 rounded-lg bg-[#222] hover:bg-[#333] transition-colors flex-shrink-0"
+            className="p-2 rounded-lg hover:bg-[#222] transition-colors flex-shrink-0 mr-3"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <svg className="w-5 h-5 text-[#F9E4AD]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </motion.button>
+          
           {selectedConversation && (
             <motion.div 
-              className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0 justify-center"
+              className="flex items-center space-x-3 flex-1 min-w-0"
               initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <motion.div 
-                className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-[#FF9940] to-[#E70008] rounded-full flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0"
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                {getConversationName(selectedConversation).charAt(0).toUpperCase()}
-              </motion.div>
-              <span className="font-medium text-sm sm:text-base text-[#F9E4AD] truncate max-w-[120px] sm:max-w-[150px]">
-                {getConversationName(selectedConversation)}
-              </span>
+              {(() => {
+                const otherParticipant = selectedConversation.participants.find(p => p.user_id !== currentUser?.id);
+                const otherUser = otherParticipant?.users;
+                const avatarUrl = otherUser?.avatar_url;
+                
+                return (
+                  <>
+                    <motion.div 
+                      className="w-10 h-10 rounded-full bg-[#FF9940]/20 flex items-center justify-center overflow-hidden flex-shrink-0"
+                      whileHover={{ scale: 1.1 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      {avatarUrl ? (
+                        <img
+                          src={avatarUrl}
+                          alt={otherUser?.username || "User"}
+                          className="w-full h-full object-cover rounded-full"
+                        />
+                      ) : (
+                        <span className="text-sm font-bold text-[#FF9940]">
+                          {otherUser?.username?.charAt(0).toUpperCase() || "?"}
+                        </span>
+                      )}
+                    </motion.div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-[#F9E4AD] truncate text-base">
+                        {getConversationName(selectedConversation)}
+                      </h3>
+                      <p className="text-xs text-gray-400 truncate">
+                        Online
+                      </p>
+                    </div>
+                  </>
+                );
+              })()}
             </motion.div>
           )}
+          
+          {/* WhatsApp-style action buttons */}
+          <div className="flex items-center space-x-2">
+            <motion.button
+              className="p-2 rounded-full hover:bg-[#222] transition-colors"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <svg className="w-5 h-5 text-[#F9E4AD]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+            </motion.button>
+            <motion.button
+              className="p-2 rounded-full hover:bg-[#222] transition-colors"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <svg className="w-5 h-5 text-[#F9E4AD]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+              </svg>
+            </motion.button>
+          </div>
         </motion.div>
         <AnimatePresence mode="wait">
           {selectedConversation ? (
@@ -1707,23 +1755,26 @@ function MessagesContent() {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
             >
-              {/* Header with Back Button - Hidden on mobile */}
+              {/* WhatsApp-style Desktop Header */}
               <motion.div 
-                className="hidden lg:flex items-center justify-between bg-[#111] border-b border-[#333] p-4"
+                className="hidden lg:flex items-center bg-[#111] border-b border-[#333] p-4"
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.1 }}
               >
                 <motion.button
                   onClick={goBack}
-                  className="bg-[#FF9940] text-black px-4 py-1 rounded-lg hover:bg-[#E70008] transition-colors"
-                  whileHover={{ scale: 1.05, x: -2 }}
+                  className="p-2 rounded-full hover:bg-[#222] transition-colors mr-3"
+                  whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  ← Back
+                  <svg className="w-5 h-5 text-[#F9E4AD]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
                 </motion.button>
+                
                 <motion.div 
-                  className="flex items-center space-x-3"
+                  className="flex items-center space-x-3 flex-1"
                   initial={{ x: 20, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ delay: 0.2 }}
@@ -1736,8 +1787,8 @@ function MessagesContent() {
                     return (
                       <>
                         <motion.div 
-                          className="w-10 h-10 rounded-full bg-[#FF9940]/20 flex items-center justify-center overflow-hidden"
-                          whileHover={{ scale: 1.1, rotate: 5 }}
+                          className="w-12 h-12 rounded-full bg-[#FF9940]/20 flex items-center justify-center overflow-hidden"
+                          whileHover={{ scale: 1.1 }}
                           transition={{ type: "spring", stiffness: 300 }}
                         >
                           {avatarUrl ? (
@@ -1747,16 +1798,54 @@ function MessagesContent() {
                               className="w-full h-full object-cover rounded-full"
                             />
                           ) : (
-                            otherUser?.username?.charAt(0).toUpperCase() || "?"
+                            <span className="text-lg font-bold text-[#FF9940]">
+                              {otherUser?.username?.charAt(0).toUpperCase() || "?"}
+                            </span>
                           )}
                         </motion.div>
-                        <span className="font-medium text-[#F9E4AD]">
-                          {otherUser?.username || "Unknown"}
-                        </span>
+                        <div className="flex-1">
+                          <h2 className="font-semibold text-[#F9E4AD] text-lg">
+                            {getConversationName(selectedConversation)}
+                          </h2>
+                          <p className="text-sm text-gray-400">
+                            Last seen recently
+                          </p>
+                        </div>
                       </>
                     );
                   })()}
                 </motion.div>
+                
+                {/* WhatsApp-style action buttons */}
+                <div className="flex items-center space-x-2">
+                  <motion.button
+                    className="p-2 rounded-full hover:bg-[#222] transition-colors"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <svg className="w-5 h-5 text-[#F9E4AD]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </motion.button>
+                  <motion.button
+                    className="p-2 rounded-full hover:bg-[#222] transition-colors"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <svg className="w-5 h-5 text-[#F9E4AD]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                  </motion.button>
+                  <motion.button
+                    className="p-2 rounded-full hover:bg-[#222] transition-colors"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <svg className="w-5 h-5 text-[#F9E4AD]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                    </svg>
+                  </motion.button>
+                </div>
               </motion.div>
 
               {/* Messages */}
@@ -1836,7 +1925,7 @@ function MessagesContent() {
                   {messages.map((msg, index) => (
                     <motion.div
                       key={msg.id}
-                      className={`flex ${
+                      className={`flex mb-2 ${
                         msg.sender_id === currentUser?.id
                           ? "justify-end"
                           : "justify-start"
@@ -1845,86 +1934,141 @@ function MessagesContent() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                     >
-                      <div
-                        className={`max-w-xs sm:max-w-md px-4 py-2 rounded-lg ${
-                          msg.sender_id === currentUser?.id
-                            ? "bg-[#E70008] text-white"
-                            : "bg-[#222] text-[#F9E4AD]"
-                        }`}
-                      >
-                        {msg.sender_id !== currentUser?.id && msg.sender && (
-                          <p className="text-xs text-[#FF9940] mb-1">
-                            {msg.sender.username}
-                          </p>
-                        )}
-                        <p className="text-sm break-words">{msg.content}</p>
-                        <p className="text-xs text-gray-400 mt-1 text-right">
-                          {(() => {
-                            const messageTime = new Date(msg.created_at);
-                            const now = new Date();
-                            const diffInMinutes = (now.getTime() - messageTime.getTime()) / (1000 * 60);
-                            
-                            if (diffInMinutes < 1) {
-                              return 'Just now';
-                            } else if (diffInMinutes < 60) {
-                              // Within last hour - show minutes
-                              return `${Math.floor(diffInMinutes)}m ago`;
-                            } else if (diffInMinutes < 1440) {
-                              // Today - show time
-                              return messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                            } else if (diffInMinutes < 2880) {
-                              // Yesterday
-                              return 'Yesterday';
-                            } else {
-                              // Older - show date and time
-                              return messageTime.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-                            }
-                          })()}
-                        </p>
+                      <div className="relative max-w-xs sm:max-w-md">
+                        <div
+                          className={`px-3 py-2 relative ${
+                            msg.sender_id === currentUser?.id
+                              ? "bg-[#E70008] text-white rounded-tl-2xl rounded-tr-md rounded-bl-2xl rounded-br-md"
+                              : "bg-[#222] text-[#F9E4AD] rounded-tl-md rounded-tr-2xl rounded-bl-md rounded-br-2xl"
+                          }`}
+                        >
+                          {/* WhatsApp-style tail */}
+                          <div
+                            className={`absolute w-0 h-0 ${
+                              msg.sender_id === currentUser?.id
+                                ? "right-0 top-0 border-l-[8px] border-l-[#E70008] border-t-[8px] border-t-transparent"
+                                : "left-0 top-0 border-r-[8px] border-r-[#222] border-t-[8px] border-t-transparent"
+                            }`}
+                            style={{
+                              transform: msg.sender_id === currentUser?.id 
+                                ? 'translateX(8px) translateY(-8px)' 
+                                : 'translateX(-8px) translateY(-8px)'
+                            }}
+                          />
+                          
+                          {msg.sender_id !== currentUser?.id && msg.sender && (
+                            <p className="text-xs text-[#FF9940] mb-1 font-medium">
+                              {msg.sender.username}
+                            </p>
+                          )}
+                          <p className="text-sm break-words leading-relaxed">{msg.content}</p>
+                          <div className="flex items-center justify-end mt-1 space-x-1">
+                            <p className="text-xs opacity-70">
+                              {(() => {
+                                const messageTime = new Date(msg.created_at);
+                                const now = new Date();
+                                const diffInMinutes = (now.getTime() - messageTime.getTime()) / (1000 * 60);
+                                
+                                if (diffInMinutes < 1) {
+                                  return 'Just now';
+                                } else if (diffInMinutes < 60) {
+                                  // Within last hour - show minutes
+                                  return `${Math.floor(diffInMinutes)}m ago`;
+                                } else if (diffInMinutes < 1440) {
+                                  // Today - show time
+                                  return messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                } else if (diffInMinutes < 2880) {
+                                  // Yesterday
+                                  return 'Yesterday';
+                                } else {
+                                  // Older - show date and time
+                                  return messageTime.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                                }
+                              })()}
+                            </p>
+                            {/* WhatsApp-style message status indicators for sent messages */}
+                            {msg.sender_id === currentUser?.id && (
+                              <div className="flex items-center">
+                                <svg className="w-4 h-4 opacity-70" fill="currentColor" viewBox="0 0 16 16">
+                                  <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/>
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </motion.div>
                   ))}
                 </AnimatePresence>
               </motion.div>
 
-              {/* Input */}
+              {/* WhatsApp-style Input */}
               <motion.form 
                 onSubmit={sendMessage} 
-                className="bg-[#111] border-t border-[#333] p-2 sm:p-3 lg:p-3 safe-area-inset-bottom fixed bottom-0 left-0 right-0 z-50"
+                className="bg-[#111] border-t border-[#333] p-3 sm:p-4 safe-area-inset-bottom fixed bottom-0 left-0 right-0 z-50"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
               >
-                <div className="flex items-end space-x-2 sm:space-x-3 lg:space-x-3">
-                  <motion.input
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Type a message..."
-                    className="flex-1 bg-[#222] text-[#F9E4AD] rounded-xl sm:rounded-2xl px-3 sm:px-4 lg:px-4 py-2 sm:py-3 lg:py-3 text-sm sm:text-base lg:text-base focus:outline-none focus:ring-2 focus:ring-[#FF9940] focus:bg-[#333] transition-all duration-200 min-h-[40px] sm:min-h-[44px] lg:min-h-[44px] border border-[#333] hover:border-[#444]"
-                    disabled={sending}
-                    whileFocus={{ scale: 1.01 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  />
+                <div className="flex items-end space-x-3 max-w-4xl mx-auto">
+                  {/* Attachment button */}
+                  <motion.button
+                    type="button"
+                    className="w-10 h-10 bg-[#222] hover:bg-[#333] rounded-full flex items-center justify-center text-[#FF9940] transition-colors"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                    </svg>
+                  </motion.button>
+
+                  {/* Input container */}
+                  <div className="flex-1 bg-[#222] rounded-3xl border border-[#333] hover:border-[#444] transition-colors">
+                    <div className="flex items-end">
+                      <motion.input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        placeholder="Type a message..."
+                        className="flex-1 bg-transparent text-[#F9E4AD] px-4 py-3 text-sm sm:text-base focus:outline-none placeholder-gray-500"
+                        disabled={sending}
+                        whileFocus={{ scale: 1.01 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      />
+                      
+                      {/* Emoji button */}
+                      <motion.button
+                        type="button"
+                        className="p-2 text-[#FF9940] hover:text-[#F9E4AD] transition-colors"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </motion.button>
+                    </div>
+                  </div>
+
+                  {/* Send button */}
                   <motion.button
                     type="submit"
                     disabled={!newMessage.trim() || sending}
-                    className="bg-gradient-to-r from-[#E70008] to-[#FF9940] hover:from-[#FF9940] hover:to-[#E70008] text-white px-3 sm:px-4 lg:px-4 py-2 sm:py-3 lg:py-3 rounded-xl sm:rounded-2xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base lg:text-base min-h-[40px] sm:min-h-[44px] lg:min-h-[44px] min-w-[40px] sm:min-w-[44px] lg:min-w-[70px] flex items-center justify-center shadow-lg"
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
+                      newMessage.trim() && !sending
+                        ? "bg-[#E70008] hover:bg-[#FF9940] text-white shadow-lg"
+                        : "bg-[#222] text-[#FF9940] cursor-not-allowed opacity-50"
+                    }`}
+                    whileHover={newMessage.trim() && !sending ? { scale: 1.1 } : {}}
+                    whileTap={newMessage.trim() && !sending ? { scale: 0.9 } : {}}
                   >
                     {sending ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin sm:hidden"></div>
-                        <span className="hidden sm:inline">Sending...</span>
-                      </>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     ) : (
-                      <>
-                        <svg className="w-5 h-5 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                        </svg>
-                        <span className="hidden sm:inline">Send</span>
-                      </>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
                     )}
                   </motion.button>
                 </div>

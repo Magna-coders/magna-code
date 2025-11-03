@@ -331,7 +331,7 @@ export default function Home() {
                 {[
                   { icon: IconMessageCircle, text: "12 new members joined today", delay: 4.0 },
                   { icon: IconRocket, text: "3 projects started this week", delay: 4.2 },
-                  { icon: IconPalette, text: "UX Lab released a new design system", delay: 4.4 }
+                  { icon: IconPalette, text: "find your coding partner closest to you", delay: 4.4 }
                 ].map((item, index) => (
                   <motion.div
                     key={index}
@@ -370,16 +370,30 @@ export default function Home() {
             >
               <h3 className="text-xl font-bold text-[#F9E4AD] mb-4">Faces of the Revolution</h3>
               <div className="grid grid-cols-4 gap-2">
-                {Array.from({ length: 8 }, (_, i) => (
+                {[1, 2, 4, 5, 6, 7, 8, 1].map((faceNum, i) => (
                   <motion.div
                     key={i}
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 4.8 + i * 0.1, duration: 0.4, ease: "backOut" }}
                     whileHover={{ scale: 1.1, rotate: 5 }}
-                    className="w-12 h-12 bg-gradient-to-br from-[#E70008] to-[#FF9940] rounded-full flex items-center justify-center text-white font-bold text-sm cursor-pointer"
+                    className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#E70008] cursor-pointer"
                   >
-                    {String.fromCharCode(65 + i)}
+                    <img 
+                      src={`/face/face ${faceNum}.png`}
+                      alt={`Community member ${faceNum}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Fallback to gradient background with letter if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.className = "w-12 h-12 bg-gradient-to-br from-[#E70008] to-[#FF9940] rounded-full flex items-center justify-center text-white font-bold text-sm cursor-pointer";
+                          parent.innerHTML = String.fromCharCode(65 + i);
+                        }
+                      }}
+                    />
                   </motion.div>
                 ))}
               </div>
